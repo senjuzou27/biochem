@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Биохимия">
+  <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <title>Биохимия — Подготовка к экзамену</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%232563eb'/%3E%3Cpath d='M65 40h50M75 40v35L45 130a12 12 0 0010.5 18h69a12 12 0 0010.5-18L105 75V40' stroke='%23fff' stroke-width='10' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M58 110h64' stroke='%2393c5fd' stroke-width='8' stroke-linecap='round'/%3E%3Ccircle cx='80' cy='128' r='6' fill='%23fff'/%3E%3Ccircle cx='102' cy='122' r='8' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22%D0%91%D0%B8%D0%BE%D1%85%D0%B8%D0%BC%D0%B8%D1%8F%20%D0%AD%D0%BA%D0%B7%D0%B0%D0%BC%D0%B5%D0%BD%22%2C%22short_name%22%3A%22%D0%91%D0%B8%D0%BE%D1%85%D0%B8%D0%BC%D0%B8%D1%8F%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
+
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-2: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --success: #16a34a;
+      --success-soft: #dcfce7;
+      --warning: #d97706;
+      --warning-soft: #fef3c7;
+      --danger: #dc2626;
+      --danger-soft: #fee2e2;
+      --radius: 16px;
+      --font-scale: 1;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left: env(safe-area-inset-left, 0px);
+      --safe-right: env(safe-area-inset-right, 0px);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0b1120;
+        --surface: #1e293b;
+        --surface-2: #334155;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --primary: #3b82f6;
+        --primary-soft: #1e3a8a;
+        --success: #22c55e;
+        --success-soft: #14532d;
+        --warning: #f59e0b;
+        --warning-soft: #78350f;
+        --danger: #ef4444;
+        --danger-soft: #7f1d1d;
+      }
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --primary: #3b82f6;
+      --primary-soft: #1e3a8a;
+      --success: #22c55e;
+      --success-soft: #14532d;
+      --warning: #f59e0b;
+      --warning-soft: #78350f;
+      --danger: #ef4444;
+      --danger-soft: #7f1d1d;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: calc(16px * var(--font-scale));
+      line-height: 1.5;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .selectable {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      padding-top: var(--safe-top);
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      min-height: 56px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px;
+      padding-bottom: 28px;
+    }
+
+    nav.tabbar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 6px 2px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+      margin-bottom: 3px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+    }
+
+    .card-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    button, .btn {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.08s ease, opacity 0.15s ease;
+      font-family: inherit;
+    }
+
+    button:active, .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: #ffffff;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-sm {
+      min-height: 44px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+
+    input[type="text"],
+    input[type="search"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      font-size: 16px !important;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+
+    .badge-primary { background: var(--primary-soft); color: var(--primary); }
+    .badge-success { background: var(--success-soft); color: var(--success); }
+    .badge-warning { background: var(--warning-soft); color: var(--warning); }
+    .badge-danger  { background: var(--danger-soft); color: var(--danger); }
+
+    /* 3D Flashcard */
+    .flashcard-scene {
+      perspective: 1100px;
+      width: 100%;
+      height: 330px;
+      margin: 10px 0 16px;
+      position: relative;
+      touch-action: pan-y;
+    }
+
+    .flashcard {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+    }
+
+    .flashcard.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+
+    .flashcard-back {
+      transform: rotateY(180deg);
+      background: var(--surface);
+      border-color: var(--primary);
+    }
+
+    .formula-text {
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--surface-2);
+      padding: 12px 16px;
+      border-radius: 12px;
+      word-break: break-word;
+      max-width: 100%;
+    }
+
+    .formula-img {
+      max-width: 100%;
+      max-height: 165px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin: 6px 0;
+      background: #fff;
+      padding: 4px;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      justify-content: flex-start;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+
+    .option-btn.correct {
+      border-color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .option-btn.wrong {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 6px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .ticket-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: var(--surface);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90dvh;
+      border-radius: 22px 22px 0 0;
+      padding: 20px 16px calc(20px + var(--safe-bottom));
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chip-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      white-space: nowrap;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      min-height: 44px;
+    }
+
+    .chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .answer-content {
+      white-space: pre-line;
+      line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed;
+      top: calc(16px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: var(--bg);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 id="header-title">Биохимия Экзамен</h1>
+    <div id="header-actions"></div>
+  </header>
+
+  <main id="main-view"></main>
+
+  <nav class="tabbar" role="navigation" aria-label="Основная навигация">
+    <button class="tab-btn active" data-tab="home" onclick="App.navigate('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>
+      <span>Главная</span>
+    </button>
+    <button class="tab-btn" data-tab="cards" onclick="App.navigate('cards')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+      <span>Карточки</span>
+    </button>
+    <button class="tab-btn" data-tab="quiz" onclick="App.navigate('quiz')">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Тест</span>
+    </button>
+    <button class="tab-btn" data-tab="tickets" onclick="App.navigate('tickets')">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>Билеты</span>
+    </button>
+    <button class="tab-btn" data-tab="more" onclick="App.navigate('more')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Ещё</span>
+    </button>
+  </nav>
+</div>
+
+<div id="modal-backdrop" class="modal-backdrop" onclick="if(event.target===this) App.closeModal()">
+  <div id="modal-sheet" class="modal-sheet"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ==========================================================================
+   1. ИСХОДНЫЕ ДАННЫЕ (КОНСТАНТА DATA С ПОМЕТКОЙ demo: true)
+   ========================================================================== */
+const DATA = {
+  tickets: [
+    {
+      id: 1,
+      demo: true,
+      section: "practice",
+      title: "Умение 5. Определение концентрации белка сыворотки крови биуретовым методом",
+      answer: "Принцип метода: в щелочной среде белок образует с ионами меди (Cu²⁺) комплексное соединение фиолетового цвета, интенсивность окраски которого пропорциональна концентрации пептидных связей (белка) в пробе.\n\nХод работы:\n• Опытная проба: 0,02 мл сыворотки крови + 1 мл биуретового реагента.\n• Стандартная проба: 0,02 мл калибратора (альбумин 70 г/л) + 1 мл реагента.\n• Инкубация 15 минут при комнатной температуре, фотометрия на ФЭК.\n\nРасчёт: C = (Eоп / Eст) × 70 г/л.\nНорма общего белка в сыворотке крови взрослого: 65–85 г/л."
+    },
+    {
+      id: 2,
+      demo: true,
+      section: "practice",
+      title: "Умение 9. Определение содержания витамина С в моче (метод Тильманса)",
+      answer: "Принцип метода: основан на способности аскорбиновой кислоты восстанавливать 2,6-дихлорфенолиндофенол (ДХФИФ). В кислой среде окисленная форма ДХФИФ имеет красную окраску, а при восстановлении переходит в бесцветную лейкоформу.\n\nТитрование проводят в кислой среде (добавляют HCl для защиты витамина С от разрушения) 0,001 н раствором ДХФИФ до устойчивой розовой окраски (30 сек).\nНорма суточной экскреции аскорбиновой кислоты с мочой: 20–40 мг/сут."
+    },
+    {
+      id: 3,
+      demo: true,
+      section: "practice",
+      title: "Метод 3. Количественное определение глюкозы крови глюкозооксидазным методом",
+      answer: "Принцип метода: Глюкоза в присутствии фермента глюкозооксидазы окисляется кислородом воздуха до глюконовой кислоты и пероксида водорода (H₂O₂).\nНа втором этапе пероксидаза использует H₂O₂ для окислительной конденсации фенола и 4-аминоантипирина (п-аминофеназона) в окрашенный хинонимин.\n\nИнтенсивность окраски пропорциональна концентрации глюкозы.\nНорма глюкозы в сыворотке крови: 3,9–5,8 ммоль/л (в цельной капиллярной крови 3,3–5,5 ммоль/л)."
+    },
+    {
+      id: 4,
+      demo: true,
+      section: "practice",
+      title: "Метод 6. Определение активности АсАТ и АлАТ в сыворотке крови",
+      answer: "Принцип метода: В результате переаминирования при участии АсАТ и АлАТ образуются щавелевоуксусная (оксалоацетат) и пировиноградная (пируват) кислоты.\nПри добавлении 2,4-динитрофенилгидразина образуются окрашенные гидразоны пировиноградной кислоты в щелочной среде.\n\nНорма в сыворотке: АлАТ 7–40 МЕ/л, АсАТ 10–40 МЕ/л.\nКлиническое значение: АлАТ резко возрастает при остром гепатите; АсАТ — в 95% случаев при инфаркте миокарда."
+    },
+    {
+      id: 25,
+      demo: true,
+      section: "theory",
+      title: "Билет 25. Витамин РР, строение и биологическая роль. Коферменты НАД⁺ и НАДФ⁺",
+      answer: "Витамин РР (никотиновая кислота, никотинамид, витамин B₃/B₅) — антипеллагрический витамин. Потребность: 15–25 мг/сут.\n\nКоферментные формы: НАД⁺ (никотинамидадениндинуклеотид) и НАДФ⁺ (никотинамидадениндинуклеотидфосфат). Образуются при участии АТФ. Активной частью служит пиридиновое кольцо никотинамида, способное обратимо присоединять гидрид-ион (H⁻ — один протон и два электрона).\n\nБиологическая роль: коферменты более 100 дегидрогеназ тканевого дыхания, гликолиза, цикла Кребса, β-окисления жирных кислот.\nАвитаминоз — пеллагра (три «Д»: дерматит, диарея, деменция)."
+    },
+    {
+      id: 30,
+      demo: true,
+      section: "theory",
+      title: "Билет 30. Витамин В₆: пиридоксин, пиридоксаль, пиридоксамин. Пиридоксальфосфат",
+      answer: "Витамин В₆ включает три производных 3-гидроксипиридина: пиридоксин (спирт), пиридоксаль (альдегид) и пиридоксамин (амин). Суточная потребность: 2–3 мг.\n\nКоферментная форма — пиридоксальфосфат (ПАЛФ).\nБиохимические функции ПАЛФ:\n1. Трансаминирование (переаминирование) аминокислот — кофермент аминотрансфераз (АлАТ, АсАТ). Альдегидная группа ПАЛФ образует с аминокислотой основание Шиффа.\n2. Декарбоксилирование аминокислот — синтез биогенных аминов (ГАМК, серотонин, гистамин, дофамин).\n3. Участие в синтезе гема (δ-аминолевулинатсинтаза)."
+    },
+    {
+      id: 40,
+      demo: true,
+      section: "theory",
+      title: "Билет 40. Макроэргические соединения. Строение АТФ и креатинфосфата",
+      answer: "Макроэргические соединения содержат богатые энергией связи (~), при гидролизе которых выделяется более 21 кДж/моль (в среднем 30,5 кДж/моль для АТФ).\n\nТипы макроэргов:\n1. Фосфоангидридные: АТФ, ГТФ, УТФ, ЦТФ.\n2. Енолфосфатные: фосфоенолпируват (ФЕП, до 61,9 кДж/моль).\n3. Ацилфосфатные: 1,3-бисфосфоглицерат, карбамоилфосфат.\n4. Гуанидинфосфатные: креатинфосфат.\n5. Тиоэфирные: ацетил-КоА, сукцинил-КоА.\n\nКреатинфосфат синтезируется в печени и почках (из аргинина, глицина и метионина), а фосфорилируется в мышцах и мозге под действием креатинкиназы: Креатин + АТФ ⇄ Креатинфосфат + АДФ."
+    },
+    {
+      id: 42,
+      demo: true,
+      section: "theory",
+      title: "Билет 42. Цикл трикарбоновых кислот (цикл Кребса): реакции, ферменты, биоэнергетика",
+      answer: "Цикл Кребса (ЦТК) — заключительный общий путь катаболизма углеводов, липидов и аминокислот в матриксе митохондрий (кроме сукцинатдегидрогеназы, встроенной во внутреннюю мембрану).\n\n8 реакций:\n1. Цитратсинтаза: Ацетил-КоА + Оксалоацетат → Цитрат.\n2. Аконитаза: Цитрат ⇄ цис-Аконитат ⇄ Изоцитрат.\n3. Изоцитратдегидрогеназа (лимитирующий фермент): Изоцитрат + НАД⁺ → α-Кетоглутарат + CO₂ + НАДН+H⁺.\n4. α-Кетоглутаратдегидрогеназный комплекс: α-Кетоглутарат + НАД⁺ + HS-КоА → Сукцинил-КоА + CO₂ + НАДН+H⁺.\n5. Сукцинил-КоА-синтетаза: Сукцинил-КоА + ГДФ + Фн ⇄ Сукцинат + ГТФ (субстратное фосфорилирование).\n6. Сукцинатдегидрогеназа: Сукцинат + ФАД ⇄ Фумарат + ФАДH₂.\n7. Фумараза: Фумарат + H₂O ⇄ L-Малат.\n8. Малатдегидрогеназа: L-Малат + НАД⁺ ⇄ Оксалоацетат + НАДН+H⁺.\n\nЭнергетический выход 1 оборота: 3 НАДН (×3 = 9 АТФ) + 1 ФАДH₂ (×2 = 2 АТФ) + 1 ГТФ (1 АТФ) = 12 молекул АТФ."
+    },
+    {
+      id: 48,
+      demo: true,
+      section: "theory",
+      title: "Билет 48. Гликолиз: этапы, ключевые ферменты и энергетическая ценность",
+      answer: "Гликолиз — процесс расщепления 1 молекулы глюкозы (C₆H₁₂O₆) в цитоплазме клетки до 2 молекул пирувата (или лактата в анаэробных условиях).\n\nКлючевые необратимые ферменты гликолиза:\n1. Гексокиназа (в печени — глюкокиназа): Глюкоза + АТФ → Глюкозо-6-фосфат + АДФ.\n2. Фосфофруктокиназа-1 (главный аллостерический регулятор): Фруктозо-6-фосфат + АТФ → Фруктозо-1,6-бисфосфат + АДФ. Активируется АМФ и фруктозо-2,6-бисфосфатом, ингибируется АТФ и цитратом.\n3. Пируваткиназа: Фосфоенолпируват + АДФ → Пируват + АТФ.\n\nЭнергетический баланс анаэробного гликолиза: тратится 2 АТФ, образуется 4 АТФ (субстратное фосфорилирование), чистый выход — 2 АТФ на 1 молекулу глюкозы."
+    },
+    {
+      id: 72,
+      demo: true,
+      section: "theory",
+      title: "Билет 72. Образование и обезвреживание аммиака. Орнитиновый цикл синтеза мочевины",
+      answer: "Аммиак (NH₃) — токсичный продукт дезаминирования аминокислот и биогенных аминов.\nТранспортные формы аммиака в крови: глутамин (синтезируется глутаминсинтетазой) и аланин (глюкозо-аланиновый цикл).\n\nОрнитиновый цикл Кребса–Гензелейта протекает в гепатоцитах (митохондрии + цитозоль):\n1. Карбамоилфосфатсинтетаза I (митохондрии): NH₃ + CO₂ + 2 АТФ → Карбамоилфосфат.\n2. Орнитинкарбамоилтрансфераза: Карбамоилфосфат + Орнитин → Цитруллин.\n3. Аргининосукцинатсинтетаза (цитозоль): Цитруллин + Аспартат + АТФ → Аргининосукцинат + АМФ + ФФн.\n4. Аргининосукцинатлиаза: Аргининосукцинат → Аргинин + Фумарат (связь с ЦТК).\n5. Аргиназа: Аргинин + H₂O → Мочевина H₂N–CO–NH₂ + Орнитин."
+    }
+  ],
+
+  cards: [
+    {
+      id: "c1",
+      demo: true,
+      category: "Обмен углеводов",
+      ticket: 48,
+      front: "Пировиноградная кислота (Пируват)",
+      back_text: "CH₃–CO–COOH",
+      back_img: null,
+      note: "Конечный продукт аэробного гликолиза; α-кетокислота (3 атома C)."
+    },
+    {
+      id: "c2",
+      demo: true,
+      category: "Обмен углеводов",
+      ticket: 48,
+      front: "Молочная кислота (Лактат)",
+      back_text: "CH₃–CH(OH)–COOH",
+      back_img: null,
+      note: "Конечный продукт анаэробного гликолиза. Образуется из пирувата под действием ЛДГ (кофермент НАДН+H⁺)."
+    },
+    {
+      id: "c3",
+      demo: true,
+      category: "Цикл Кребса",
+      ticket: 42,
+      front: "Щавелевоуксусная кислота (Оксалоацетат, ЩУК)",
+      back_text: "HOOC–CO–CH₂–COOH",
+      back_img: null,
+      note: "Дикарбоновая α-кетокислота (C₄). Конденсируется с ацетил-КоА в 1-й реакции цикла Кребса с образованием цитрата."
+    },
+    {
+      id: "c4",
+      demo: true,
+      category: "Цикл Кребса",
+      ticket: 42,
+      front: "α-Кетоглутаровая кислота (α-Кетоглутарат)",
+      back_text: "HOOC–CO–CH₂–CH₂–COOH",
+      back_img: null,
+      note: "Пятиуглеродная дикарбоновая α-кетокислота. Главный акцептор аминогрупп в реакциях трансаминирования."
+    },
+    {
+      id: "c5",
+      demo: true,
+      category: "Цикл Кребса",
+      ticket: 42,
+      front: "Янтарная кислота (Сукцинат)",
+      back_text: "HOOC–CH₂–CH₂–COOH",
+      back_img: null,
+      note: "Субстрат сукцинатдегидрогеназы (комплекс II ЭТЦ), окисляется с участием ФАД до фумарата."
+    },
+    {
+      id: "c6",
+      demo: true,
+      category: "Цикл Кребса",
+      ticket: 42,
+      front: "Фумаровая кислота (Фумарат)",
+      back_text: "HOOC–CH=CH–COOH (транс-изомер)",
+      back_img: null,
+      note: "Ненасыщенная дикарбоновая кислота. Образуется в ЦТК и в орнитиновом цикле."
+    },
+    {
+      id: "c7",
+      demo: true,
+      category: "Аминокислоты",
+      ticket: 4,
+      front: "Аланин (Ala)",
+      back_text: "CH₃–CH(NH₂)–COOH",
+      back_img: null,
+      note: "При трансаминировании с участием АлАТ превращается в пируват."
+    },
+    {
+      id: "c8",
+      demo: true,
+      category: "Аминокислоты",
+      ticket: 72,
+      front: "Мочевина (Карбамид)",
+      back_text: "H₂N–CO–NH₂",
+      back_img: null,
+      note: "Диамид угольной кислоты — главный конечный продукт азотистого обмена у человека (норма в крови 3,0–8,3 ммоль/л)."
+    },
+    {
+      id: "c9",
+      demo: true,
+      category: "Кетоновые тела",
+      ticket: 11,
+      front: "Ацетоуксусная кислота (Ацетоацетат)",
+      back_text: "CH₃–CO–CH₂–COOH",
+      back_img: null,
+      note: "Первичное кетоновое тело (β-кетомасляная кислота). При декарбоксилировании даёт ацетон CH₃–CO–CH₃."
+    },
+    {
+      id: "c10",
+      demo: true,
+      category: "Макроэрги",
+      ticket: 40,
+      front: "Креатинфосфат",
+      back_text: "HN=C(NH–PO₃H₂)–N(CH₃)–CH₂–COOH",
+      back_img: null,
+      note: "Гуанидинфосфатный макроэрг скелетных мышц и миокарда. Резерв для экстренного ресинтеза АТФ."
+    }
+  ],
+
+  questions: [
+    {
+      id: "q1",
+      demo: true,
+      type: "formula_to_name",
+      ticket: 48,
+      category: "Обмен углеводов",
+      question: "Какому соединению соответствует формула CH₃–CO–COOH?",
+      question_img: null,
+      options: [
+        "Пировиноградная кислота (пируват)",
+        "Молочная кислота (лактат)",
+        "Щавелевоуксусная кислота (оксалоацетат)",
+        "Ацетоуксусная кислота (ацетоацетат)"
+      ],
+      correct: 0,
+      explanation: "CH₃–CO–COOH — пировиноградная кислота (α-кетопропионовая), ключевой метаболит гликолиза."
+    },
+    {
+      id: "q2",
+      demo: true,
+      type: "name_to_formula",
+      ticket: 42,
+      category: "Цикл Кребса",
+      question: "Выберите химическую формулу щавелевоуксусной кислоты (оксалоацетата):",
+      question_img: null,
+      options: [
+        "HOOC–CO–CH₂–COOH",
+        "HOOC–CH₂–CH₂–COOH",
+        "HOOC–CO–CH₂–CH₂–COOH",
+        "HOOC–CH=CH–COOH"
+      ],
+      correct: 0,
+      explanation: "Оксалоацетат содержит 4 атома углерода, две карбоксильные и одну кетогруппу: HOOC–CO–CH₂–COOH."
+    },
+    {
+      id: "q3",
+      demo: true,
+      type: "formula_to_name",
+      ticket: 42,
+      category: "Цикл Кребса",
+      question: "Назовите метаболит цикла Кребса с формулой HOOC–CH₂–CH₂–COOH:",
+      question_img: null,
+      options: [
+        "Янтарная кислота (сукцинат)",
+        "Фумаровая кислота (фумарат)",
+        "Яблочная кислота (малат)",
+        "α-Кетоглутаровая кислота"
+      ],
+      correct: 0,
+      explanation: "HOOC–CH₂–CH₂–COOH — предельная дикарбоновая янтарная кислота (сукцинат)."
+    },
+    {
+      id: "q4",
+      demo: true,
+      type: "name_to_formula",
+      ticket: 72,
+      category: "Аминокислоты",
+      question: "Укажите правильную формулу мочевины (конечного продукта орнитинового цикла):",
+      question_img: null,
+      options: [
+        "H₂N–CO–NH₂",
+        "CH₃–CH(NH₂)–COOH",
+        "H₂N–CH₂–COOH",
+        "CH₃–CO–NH₂"
+      ],
+      correct: 0,
+      explanation: "Мочевина — полный амид угольной кислоты с формулой H₂N–CO–NH₂."
+    },
+    {
+      id: "q5",
+      demo: true,
+      type: "text",
+      ticket: 30,
+      category: "Витамины",
+      question: "Какой кофермент входит в состав аминотрансфераз (АлАТ и АсАТ) и обеспечивает переаминирование аминокислот?",
+      question_img: null,
+      options: [
+        "Пиридоксальфосфат (производное витамина B₆)",
+        "Тиаминдифосфат (производное витамина B₁)",
+        "Флавинадениндинуклеотид (производное витамина B₂)",
+        "Тетрагидрофолиевая кислота (производное витамина B₉)"
+      ],
+      correct: 0,
+      explanation: "Пиридоксальфосфат (ПАЛФ) — активная форма витамина B₆, переносящая аминогруппу в реакциях трансаминирования."
+    },
+    {
+      id: "q6",
+      demo: true,
+      type: "text",
+      ticket: 42,
+      category: "Цикл Кребса",
+      question: "Какой фермент цикла трикарбоновых кислот катализирует реакцию субстратного фосфорилирования с образованием ГТФ?",
+      question_img: null,
+      options: [
+        "Сукцинил-КоА-синтетаза",
+        "Цитратсинтаза",
+        "Изоцитратдегидрогеназа",
+        "Сукцинатдегидрогеназа"
+      ],
+      correct: 0,
+      explanation: "Сукцинил-КоА-синтетаза использует энергию тиоэфирной связи сукцинил-КоА для синтеза макроэргической молекулы ГТФ (АТФ)."
+    },
+    {
+      id: "q7",
+      demo: true,
+      type: "text",
+      ticket: 1,
+      category: "Практика",
+      question: "С какими ионами в щелочной среде пептидные связи белка образуют фиолетовый комплекс при проведении биуретовой реакции?",
+      question_img: null,
+      options: [
+        "Ионы двухвалентной меди (Cu²⁺)",
+        "Ионы трёхвалентного железа (Fe³⁺)",
+        "Ионы серебра (Ag⁺)",
+        "Ионы кальция (Ca²⁺)"
+      ],
+      correct: 0,
+      explanation: "В щелочной среде пептидные группы (–CO–NH–) образуют с ионами Cu²⁺ медный биуретовый комплекс красно-фиолетового цвета."
+    },
+    {
+      id: "q8",
+      demo: true,
+      type: "text",
+      ticket: 25,
+      category: "Витамины",
+      question: "Классическая триада симптомов «три Д» (дерматит, диарея, деменция) развивается при авитаминозе:",
+      question_img: null,
+      options: [
+        "Витамина PP (никотиновой кислоты)",
+        "Витамина С (аскорбиновой кислоты)",
+        "Витамина B₁ (тиамина)",
+        "Витамина D (кальциферола)"
+      ],
+      correct: 0,
+      explanation: "Дефицит витамина PP (и триптофана) приводит к пеллагре, проявляющейся дерматитом, диареей и деменцией."
+    },
+    {
+      id: "q9",
+      demo: true,
+      type: "name_to_formula",
+      ticket: 11,
+      category: "Кетоновые тела",
+      question: "Выберите формулу ацетоуксусной кислоты (родоначальника кетоновых тел):",
+      question_img: null,
+      options: [
+        "CH₃–CO–CH₂–COOH",
+        "CH₃–CH(OH)–COOH",
+        "CH₃–CO–COOH",
+        "HOOC–CH₂–COOH"
+      ],
+      correct: 0,
+      explanation: "Ацетоуксусная (β-кетомасляная) кислота имеет формулу CH₃–CO–CH₂–COOH."
+    },
+    {
+      id: "q10",
+      demo: true,
+      type: "text",
+      ticket: 40,
+      category: "Макроэрги",
+      question: "Какой изофермент креатинкиназы является ранним специфическим маркером инфаркта миокарда (повышается через 2–4 часа)?",
+      question_img: null,
+      options: [
+        "КК-МВ (сердечный изофермент)",
+        "КК-ВВ (мозговой изофермент)",
+        "КК-ММ (скелетно-мышечный изофермент)",
+        "ЛДГ₅ (печёночно-мышечный изофермент)"
+      ],
+      correct: 0,
+      explanation: "Фракция КК-МВ содержится преимущественно в кардиомиоцитах и выходит в кровь уже через 2–4 часа после начала некроза миокарда."
+    }
+  ]
+};
+
+/* ==========================================================================
+   2. ОБЁРТКА НАД INDEXEDDB (ХРАНЕНИЕ СЖАТЫХ КАРТИНОК ФОРМУЛ)
+   ========================================================================== */
+const ImageStore = {
+  dbName: "BiochemExamImagesDB",
+  storeName: "images",
+  db: null,
+
+  async init() {
+    try {
+      if (this.db) return this.db;
+      return await new Promise((resolve) => {
+        const req = indexedDB.open(this.dbName, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(this.storeName)) {
+            db.createObjectStore(this.storeName);
+          }
+        };
+        req.onsuccess = (e) => {
+          this.db = e.target.result;
+          resolve(this.db);
+        };
+        req.onerror = () => resolve(null);
+      });
+    } catch (err) {
+      console.warn("IndexedDB недоступна:", err);
+      return null;
+    }
+  },
+
+  async save(key, dataUrl) {
+    try {
+      const db = await this.init();
+      if (!db) return false;
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, "readwrite");
+        tx.objectStore(this.storeName).put(dataUrl, key);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => resolve(false);
+      });
+    } catch (e) {
+      return false;
+    }
+  },
+
+  async get(key) {
+    try {
+      if (!key) return null;
+      if (key.startsWith("data:image")) return key;
+      const db = await this.init();
+      if (!db) return null;
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, "readonly");
+        const req = tx.objectStore(this.storeName).get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => resolve(null);
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+
+  async getAll() {
+    try {
+      const db = await this.init();
+      if (!db) return {};
+      return await new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, "readonly");
+        const store = tx.objectStore(this.storeName);
+        const out = {};
+        const cursorReq = store.openCursor();
+        cursorReq.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            out[cursor.key] = cursor.value;
+            cursor.continue();
+          } else {
+            resolve(out);
+          }
+        };
+        cursorReq.onerror = () => resolve({});
+      });
+    } catch (e) {
+      return {};
+    }
+  },
+
+  async compressImage(file, maxWidth = 800) {
+    return new Promise((resolve, reject) => {
+      try {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            let w = img.width;
+            let h = img.height;
+            if (w > maxWidth) {
+              h = Math.round((h * maxWidth) / w);
+              w = maxWidth;
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL("image/jpeg", 0.78));
+          };
+          img.onerror = reject;
+          img.src = ev.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+};
+
+/* ==========================================================================
+   3. ГЛАВНОЕ ПРИЛОЖЕНИЕ И ЛОГИКА СОСТОЯНИЯ
+   ========================================================================== */
+const App = {
+  storageKey: "biochem_exam_app_v1",
+  currentTab: "home",
+  dbData: { tickets: [], cards: [], questions: [] },
+
+  progress: {
+    ticketsStatus: {},   // { [id]: 'learned' | 'repeat' }
+    ticketsFav: {},      // { [id]: true }
+    leitnerBoxes: {},    // { [cardId]: 1..5 }
+    wrongQuestions: [],  // [questionId]
+    categoryStats: {},   // { [cat]: { total: 0, errors: 0 } }
+    streak: { count: 0, lastDate: null },
+    lastRoute: { tab: "cards", ticketId: null },
+    settings: { theme: "auto", fontScale: 1 }
+  },
+
+  // Состояние карточек
+  cardState: {
+    category: "all",
+    onlyHard: false,
+    shuffled: false,
+    deck: [],
+    index: 0,
+    flipped: false
+  },
+
+  // Состояние теста
+  quizState: {
+    active: false,
+    mode: "normal", // normal | exam | mistakes
+    pool: [],
+    index: 0,
+    score: 0,
+    mistakes: [],
+    answered: false,
+    currentOptions: [],
+    timerSec: 0,
+    timerId: null
+  },
+
+  // Состояние билетов
+  ticketState: {
+    search: "",
+    section: "all", // all | practice | theory
+    onlyFav: false,
+    selectedId: null
+  },
+
+  async init() {
+    await ImageStore.init();
+    this.loadState();
+    this.applySettings();
+    this.updateStreak();
+    this.rebuildCardDeck();
+    this.navigate("home");
+  },
+
+  loadState() {
+    try {
+      const raw = localStorage.getItem(this.storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.dbData) this.dbData = parsed.dbData;
+        if (parsed.progress) {
+          this.progress = Object.assign(this.progress, parsed.progress);
+        }
+      } else {
+        this.dbData = JSON.parse(JSON.stringify(DATA));
+        this.saveState();
+      }
+    } catch (e) {
+      console.warn("Ошибка чтения localStorage:", e);
+      this.dbData = JSON.parse(JSON.stringify(DATA));
+    }
+  },
+
+  saveState() {
+    try {
+      const payload = JSON.stringify({
+        dbData: this.dbData,
+        progress: this.progress
+      });
+      localStorage.setItem(this.storageKey, payload);
+    } catch (e) {
+      this.toast("Хранилище переполнено! Сделайте экспорт JSON.");
+    }
+  },
+
+  updateStreak() {
+    const today = new Date().toISOString().slice(0, 10);
+    const last = this.progress.streak.lastDate;
+    if (last === today) return;
+
+    if (last) {
+      const diff = (new Date(today) - new Date(last)) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        this.progress.streak.count += 1;
+      } else if (diff > 1) {
+        this.progress.streak.count = 1;
+      }
+    } else {
+      this.progress.streak.count = 1;
+    }
+    this.progress.streak.lastDate = today;
+    this.saveState();
+  },
+
+  applySettings() {
+    const { theme, fontScale } = this.progress.settings;
+    const root = document.documentElement;
+    if (theme === "light" || theme === "dark") {
+      root.setAttribute("data-theme", theme);
+    } else {
+      root.removeAttribute("data-theme");
+    }
+    root.style.setProperty("--font-scale", fontScale || 1);
+  },
+
+  toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => el.classList.remove("show"), 2300);
+  },
+
+  navigate(tab, params = {}) {
+    if (this.quizState.timerId && tab !== "quiz") {
+      clearInterval(this.quizState.timerId);
+      this.quizState.timerId = null;
+    }
+    this.currentTab = tab;
+    if (tab !== "home") {
+      this.progress.lastRoute = { tab, ...params };
+      this.saveState();
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tab === tab);
+    });
+
+    if (tab === "home") this.renderHome();
+    else if (tab === "cards") this.renderCards();
+    else if (tab === "quiz") this.renderQuiz();
+    else if (tab === "tickets") {
+      if (params.ticketId !== undefined) this.ticketState.selectedId = params.ticketId;
+      this.renderTickets();
+    } else if (tab === "more") this.renderMore();
+  },
+
+  /* ========================================================================
+     ЭКРАН 1: ГЛАВНАЯ
+     ======================================================================== */
+  renderHome() {
+    document.getElementById("header-title").textContent = "Биохимия Экзамен";
+    document.getElementById("header-actions").innerHTML = `
+      <span class="badge badge-warning">🔥 ${this.progress.streak.count} дн.</span>
+    `;
+
+    const totalTickets = this.dbData.tickets.length;
+    const learnedTickets = Object.values(this.progress.ticketsStatus).filter(v => v === "learned").length;
+    const ticketPct = totalTickets ? Math.round((learnedTickets / totalTickets) * 100) : 0;
+
+    const totalCards = this.dbData.cards.length;
+    const masteredCards = this.dbData.cards.filter(c => (this.progress.leitnerBoxes[c.id] || 1) >= 4).length;
+    const cardPct = totalCards ? Math.round((masteredCards / totalCards) * 100) : 0;
+
+    const totalErrors = this.progress.wrongQuestions.length;
+
+    const weakList = Object.entries(this.progress.categoryStats)
+      .filter(([, st]) => st.total >= 1)
+      .map(([cat, st]) => ({
+        cat,
+        pct: Math.round((st.errors / st.total) * 100),
+        total: st.total
+      }))
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 3);
+
+    const main = document.getElementById("main-view");
+    main.innerHTML = `
+      <div class="card-box" style="background: linear-gradient(135deg, var(--primary), #1d4ed8); color: #fff; border: none;">
+        <div style="font-size:0.85rem; opacity:0.9;">Быстрый старт</div>
+        <div style="font-size:1.25rem; font-weight:800; margin:4px 0 12px;">Продолжить подготовку</div>
+        <button class="btn" style="background:#fff; color:#1d4ed8; width:100%;" onclick="App.resumeLast()">
+          Продолжить с последнего места →
+        </button>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div class="card-box" style="margin:0; text-align:center;" onclick="App.navigate('tickets')">
+          <div class="stat-num">${learnedTickets}/${totalTickets}</div>
+          <div class="stat-label">Билеты</div>
+        </div>
+        <div class="card-box" style="margin:0; text-align:center;" onclick="App.navigate('cards')">
+          <div class="stat-num">${masteredCards}/${totalCards}</div>
+          <div class="stat-label">Формулы (4–5 кор.)</div>
+        </div>
+        <div class="card-box" style="margin:0; text-align:center;" onclick="App.navigate('quiz')">
+          <div class="stat-num" style="color:${totalErrors > 0 ? 'var(--danger)' : 'var(--success)'}">${totalErrors}</div>
+          <div class="stat-label">Ошибок в тесте</div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div style="display:flex; justify-content:space-between; font-weight:600;">
+          <span>Прогресс по билетам</span>
+          <span>${ticketPct}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${ticketPct}%"></div></div>
+
+        <div style="display:flex; justify-content:space-between; font-weight:600; margin-top:12px;">
+          <span>Освоение карточек Лейтнера</span>
+          <span>${cardPct}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${cardPct}%"></div></div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="margin:0 0 10px; font-size:1rem;">Слабые темы (по проценту ошибок)</h3>
+        ${weakList.length === 0
+          ? `<div style="color:var(--text-muted); font-size:0.9rem;">Пройдите хотя бы один тест, чтобы увидеть аналитику по категориям.</div>`
+          : weakList.map(w => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border);">
+              <span>${this.escape(w.cat)} <small style="color:var(--text-muted)">(${w.total} отв.)</small></span>
+              <span class="badge ${w.pct > 40 ? 'badge-danger' : 'badge-warning'}">${w.pct}% ошибок</span>
+            </div>
+          `).join("")
+        }
+      </div>
+    `;
+  },
+
+  resumeLast() {
+    const lr = this.progress.lastRoute || { tab: "cards" };
+    this.navigate(lr.tab || "cards", lr);
+  },
+
+  /* ========================================================================
+     ЭКРАН 2: КАРТОЧКИ С ФОРМУЛАМИ (СИСТЕМА ЛЕЙТНЕРА 1–5)
+     ======================================================================== */
+  rebuildCardDeck() {
+    let list = [...this.dbData.cards];
+    if (this.cardState.category !== "all") {
+      list = list.filter(c => c.category === this.cardState.category);
+    }
+    if (this.cardState.onlyHard) {
+      list = list.filter(c => (this.progress.leitnerBoxes[c.id] || 1) <= 2);
+    }
+    // Сортировка по коробкам Лейтнера (сначала коробка 1)
+    list.sort((a, b) => (this.progress.leitnerBoxes[a.id] || 1) - (this.progress.leitnerBoxes[b.id] || 1));
+
+    if (this.cardState.shuffled) {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+    }
+    this.cardState.deck = list;
+    if (this.cardState.index >= list.length) this.cardState.index = 0;
+    this.cardState.flipped = false;
+  },
+
+  async renderCards() {
+    document.getElementById("header-title").textContent = "Карточки формул";
+    document.getElementById("header-actions").innerHTML = `
+      <button class="btn-secondary btn-sm" onclick="App.openCardModal()">+ Карточка</button>
+    `;
+
+    const categories = ["all", ...new Set(this.dbData.cards.map(c => c.category).filter(Boolean))];
+    const deck = this.cardState.deck;
+    const current = deck[this.cardState.index];
+    const main = document.getElementById("main-view");
+
+    const catChips = categories.map(cat => `
+      <button class="chip ${this.cardState.category === cat ? 'active' : ''}"
+              onclick="App.setCardCategory('${this.escapeAttr(cat)}')">
+        ${cat === "all" ? "Все темы" : this.escape(cat)}
+      </button>
+    `).join("");
+
+    if (!current) {
+      main.innerHTML = `
+        <div class="chip-row">${catChips}</div>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <button class="btn-secondary btn-sm" onclick="App.toggleHardCards()">
+            ${this.cardState.onlyHard ? "★ Только трудные: ВКЛ" : "☆ Только трудные"}
+          </button>
+        </div>
+        <div class="card-box" style="text-align:center; padding:32px 16px;">
+          <p>Нет карточек для выбранного фильтра.</p>
+          <button class="btn-primary" onclick="App.resetCardFilters()">Сбросить фильтр</button>
+        </div>
+      `;
+      return;
+    }
+
+    const box = this.progress.leitnerBoxes[current.id] || 1;
+    const imgData = await ImageStore.get(current.back_img);
+
+    main.innerHTML = `
+      <div class="chip-row">${catChips}</div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+        <button class="btn-secondary btn-sm" onclick="App.toggleHardCards()">
+          ${this.cardState.onlyHard ? "🔥 Трудные (1–2)" : "Все коробки"}
+        </button>
+        <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600;">
+          ${this.cardState.index + 1} / ${deck.length} • Коробка ${box}/5
+        </span>
+        <button class="btn-secondary btn-sm" onclick="App.shuffleCards()">🔀 Мешать</button>
+      </div>
+
+      <div class="flashcard-scene" id="card-scene">
+        <div class="flashcard ${this.cardState.flipped ? 'is-flipped' : ''}" id="flashcard-el" onclick="App.flipCard()">
+          <div class="flashcard-face flashcard-front">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-primary">${this.escape(current.category)}</span>
+              <span class="badge">Билет №${current.ticket || "—"}</span>
+            </div>
+            <div style="font-size:1.3rem; font-weight:700; padding:12px 0;">
+              ${this.escape(current.front)}
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted);">
+              Тапните для переворота • Свайп  влево/вправо
+            </div>
+          </div>
+
+          <div class="flashcard-face flashcard-back">
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+              <span class="badge badge-primary">Формула / Ответ</span>
+              <button class="btn-secondary btn-sm" style="min-height:36px; padding:4px 10px;"
+                      onclick="event.stopPropagation(); App.openCardModal('${current.id}')">Ред.</button>
+            </div>
+            <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              ${imgData ? `<img src="${imgData}" class="formula-img" alt="Формула">` : ""}
+              ${current.back_text ? `<div class="formula-text selectable">${this.escape(current.back_text)}</div>` : ""}
+              ${current.note ? `<div style="font-size:0.9rem; color:var(--text-muted);">${this.escape(current.note)}</div>` : ""}
+            </div>
+            <div style="font-size:0.78rem; color:var(--text-muted);">Оцените ответ кнопками ниже</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <button class="btn-danger" onclick="App.rateCard('dont_know')">Не знаю<br><small style="font-weight:400;font-size:0.7rem">В кор. 1</small></button>
+        <button class="btn-warning" onclick="App.rateCard('doubt')">Сомневаюсь<br><small style="font-weight:400;font-size:0.7rem">Оставить</small></button>
+        <button class="btn-success" onclick="App.rateCard('know')">Знаю<br><small style="font-weight:400;font-size:0.7rem">Коробка +1</small></button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+        <button class="btn-secondary btn-sm" onclick="App.stepCard(-1)">← Пред.</button>
+        ${current.ticket ? `<button class="btn-secondary btn-sm" onclick="App.navigate('tickets', {ticketId:${current.ticket}})">Открыть билет №${current.ticket}</button>` : ""}
+        <button class="btn-secondary btn-sm" onclick="App.stepCard(1)">След. →</button>
+      </div>
+    `;
+
+    this.attachSwipeListeners();
+  },
+
+  attachSwipeListeners() {
+    const scene = document.getElementById("card-scene");
+    if (!scene) return;
+    let startX = 0;
+    let startY = 0;
+
+    scene.addEventListener("touchstart", (e) => {
+      if (!e.touches.length) return;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    scene.addEventListener("touchend", (e) => {
+      if (!e.changedTouches.length) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        if (dx < 0) this.stepCard(1);
+        else this.stepCard(-1);
+      }
+    }, { passive: true });
+  },
+
+  flipCard() {
+    this.cardState.flipped = !this.cardState.flipped;
+    const el = document.getElementById("flashcard-el");
+    if (el) el.classList.toggle("is-flipped", this.cardState.flipped);
+  },
+
+  stepCard(delta) {
+    const len = this.cardState.deck.length;
+    if (!len) return;
+    this.cardState.index = (this.cardState.index + delta + len) % len;
+    this.cardState.flipped = false;
+    this.renderCards();
+  },
+
+  rateCard(level) {
+    const current = this.cardState.deck[this.cardState.index];
+    if (!current) return;
+    let box = this.progress.leitnerBoxes[current.id] || 1;
+    if (level === "know") box = Math.min(5, box + 1);
+    else if (level === "dont_know") box = 1;
+    // level === 'doubt' оставляет в текущей коробке
+    this.progress.leitnerBoxes[current.id] = box;
+    this.saveState();
+    this.stepCard(1);
+  },
+
+  setCardCategory(cat) {
+    this.cardState.category = cat;
+    this.cardState.index = 0;
+    this.rebuildCardDeck();
+    this.renderCards();
+  },
+
+  toggleHardCards() {
+    this.cardState.onlyHard = !this.cardState.onlyHard;
+    this.cardState.index = 0;
+    this.rebuildCardDeck();
+    this.renderCards();
+  },
+
+  shuffleCards() {
+    this.cardState.shuffled = true;
+    this.cardState.index = 0;
+    this.rebuildCardDeck();
+    this.renderCards();
+    this.toast("Карточки перемешаны");
+  },
+
+  resetCardFilters() {
+    this.cardState.category = "all";
+    this.cardState.onlyHard = false;
+    this.rebuildCardDeck();
+    this.renderCards();
+  },
+
+  async openCardModal(cardId = null) {
+    const existing = cardId ? this.dbData.cards.find(c => c.id === cardId) : null;
+    const sheet = document.getElementById("modal-sheet");
+    const previewImg = existing && existing.back_img ? await ImageStore.get(existing.back_img) : null;
+
+    sheet.innerHTML = `
+      <h3 style="margin:0 0 12px;">${existing ? "Редактировать карточку" : "Новая карточка с формулой"}</h3>
+      <label style="font-size:0.85rem; color:var(--text-muted);">Название вещества / Вопрос (лицевая сторона)</label>
+      <input type="text" id="cf-front" value="${existing ? this.escapeAttr(existing.front) : ""}" placeholder="Например: Пиридоксальфосфат">
+
+      <div class="grid-2">
+        <div>
+          <label style="font-size:0.85rem; color:var(--text-muted);">Категория</label>
+          <input type="text" id="cf-cat" value="${existing ? this.escapeAttr(existing.category) : "Витамины"}" placeholder="Витамины">
+        </div>
+        <div>
+          <label style="font-size:0.85rem; color:var(--text-muted);">Номер билета</label>
+          <input type="number" id="cf-ticket" value="${existing && existing.ticket ? existing.ticket : 1}">
+        </div>
+      </div>
+
+      <label style="font-size:0.85rem; color:var(--text-muted);">Текстовая формула (с индексами H₂O, СН₃–СО–СООН)</label>
+      <input type="text" id="cf-back-text" value="${existing ? this.escapeAttr(existing.back_text || "") : ""}" placeholder="CH₃–CO–COOH">
+
+      <label style="font-size:0.85rem; color:var(--text-muted);">Картинка формулы из галереи iPhone (сжатие до 800px)</label>
+      <input type="file" id="cf-img-input" accept="image/*" style="padding:8px;">
+      <div id="cf-img-preview" style="margin-bottom:10px;">
+        ${previewImg ? `<img src="${previewImg}" class="formula-img" alt="Превью">` : ""}
+      </div>
+
+      <label style="font-size:0.85rem; color:var(--text-muted);">Короткая заметка или мнемоника</label>
+      <textarea id="cf-note" placeholder="Ключевая роль или реакция...">${existing ? this.escape(existing.note || "") : ""}</textarea>
+
+      <div class="grid-2" style="margin-top:8px;">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveCardFromModal('${existing ? existing.id : ""}')">Сохранить</button>
+      </div>
+      ${existing ? `<button class="btn-danger btn-block" style="margin-top:10px;" onclick="App.deleteCard('${existing.id}')">Удалить карточку</button>` : ""}
+    `;
+
+    this._pendingCardImgData = existing ? existing.back_img : null;
+    const fileInput = document.getElementById("cf-img-input");
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const compressed = await ImageStore.compressImage(file, 800);
+        this._pendingCardImgData = compressed;
+        document.getElementById("cf-img-preview").innerHTML = `<img src="${compressed}" class="formula-img">`;
+      } catch (err) {
+        this.toast("Не удалось обработать изображение");
+      }
+    });
+
+    document.getElementById("modal-backdrop").classList.add("open");
+  },
+
+  async saveCardFromModal(existingId) {
+    const front = document.getElementById("cf-front").value.trim();
+    const category = document.getElementById("cf-cat").value.trim() || "Общее";
+    const ticket = parseInt(document.getElementById("cf-ticket").value, 10) || 1;
+    const back_text = document.getElementById("cf-back-text").value.trim();
+    const note = document.getElementById("cf-note").value.trim();
+
+    if (!front) {
+      this.toast("Введите название или вопрос");
+      return;
+    }
+
+    const id = existingId || "c_" + Date.now();
+    let imgKey = null;
+
+    if (this._pendingCardImgData) {
+      if (this._pendingCardImgData.startsWith("data:image")) {
+        imgKey = "img_" + id;
+        await ImageStore.save(imgKey, this._pendingCardImgData);
+      } else {
+        imgKey = this._pendingCardImgData;
+      }
+    }
+
+    const cardObj = { id, category, ticket, front, back_text, back_img: imgKey, note };
+    const idx = this.dbData.cards.findIndex(c => c.id === id);
+    if (idx >= 0) this.dbData.cards[idx] = cardObj;
+    else this.dbData.cards.push(cardObj);
+
+    this.saveState();
+    this.closeModal();
+    this.rebuildCardDeck();
+    this.renderCards();
+    this.toast("Карточка сохранена");
+  },
+
+  deleteCard(id) {
+    this.dbData.cards = this.dbData.cards.filter(c => c.id !== id);
+    this.saveState();
+    this.closeModal();
+    this.rebuildCardDeck();
+    this.renderCards();
+    this.toast("Карточка удалена");
+  },
+
+  closeModal() {
+    document.getElementById("modal-backdrop").classList.remove("open");
+  },
+
+  /* ========================================================================
+     ЭКРАН 3: ТЕСТ НА 4 ВАРИАНТА ОТВЕТА
+     ======================================================================== */
+  renderQuiz() {
+    document.getElementById("header-title").textContent = "Тестирование";
+    document.getElementById("header-actions").innerHTML = this.quizState.active
+      ? `<button class="btn-secondary btn-sm" onclick="App.stopQuiz()">Завершить</button>`
+      : "";
+
+    const main = document.getElementById("main-view");
+    if (!this.quizState.active) {
+      const errCount = this.progress.wrongQuestions.length;
+      main.innerHTML = `
+        <div class="card-box">
+          <h3 style="margin:0 0 8px;">Выберите режим тренировки</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0;">
+            Поддерживаются вопросы по теории, распознавание названия по формуле и выбор формулы по названию.
+          </p>
+
+          <button class="btn-primary btn-block" style="margin-bottom:10px;" onclick="App.startQuiz('normal', false)">
+            📚 Обычный режим (все вопросы без лимита)
+          </button>
+
+          <button class="btn-secondary btn-block" style="margin-bottom:10px;" onclick="App.startQuiz('exam', false)">
+            🎓 Экзамен (20 случайных вопросов, без таймера)
+          </button>
+
+          <button class="btn-secondary btn-block" style="margin-bottom:10px;" onclick="App.startQuiz('exam', true)">
+            ⏱ Экзамен с таймером (20 вопросов • 15 минут)
+          </button>
+
+          <button class="btn-warning btn-block" ${errCount === 0 ? "disabled style='opacity:0.5'" : ""} onclick="App.startQuiz('mistakes', false)">
+            🛠 Работа над ошибками (${errCount} вопр.)
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    if (this.quizState.index >= this.quizState.pool.length) {
+      this.renderQuizResults();
+      return;
+    }
+
+    this.renderQuizQuestion();
+  },
+
+  startQuiz(mode, withTimer) {
+    let source = [...this.dbData.questions];
+    if (mode === "mistakes") {
+      source = source.filter(q => this.progress.wrongQuestions.includes(q.id));
+    }
+    if (!source.length) {
+      this.toast("Нет доступных вопросов для выбранного режима");
+      return;
+    }
+
+    // Перемешивание вопросов
+    for (let i = source.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [source[i], source[j]] = [source[j], source[i]];
+    }
+
+    if (mode === "exam") {
+      source = source.slice(0, 20);
+    }
+
+    this.quizState = {
+      active: true,
+      mode,
+      pool: source,
+      index: 0,
+      score: 0,
+      mistakes: [],
+      answered: false,
+      currentOptions: [],
+      timerSec: withTimer ? 15 * 60 : 0,
+      timerId: null
+    };
+
+    if (withTimer) {
+      this.quizState.timerId = setInterval(() => {
+        this.quizState.timerSec -= 1;
+        const badge = document.getElementById("quiz-timer-badge");
+        if (badge) badge.textContent = this.formatTime(this.quizState.timerSec);
+        if (this.quizState.timerSec <= 0) {
+          clearInterval(this.quizState.timerId);
+          this.quizState.index = this.quizState.pool.length;
+          this.renderQuiz();
+        }
+      }, 1000);
+    }
+
+    this.prepareCurrentOptions();
+    this.renderQuiz();
+  },
+
+  prepareCurrentOptions() {
+    const q = this.quizState.pool[this.quizState.index];
+    if (!q) return;
+    const mapped = q.options.map((text, idx) => ({
+      text,
+      isCorrect: idx === q.correct
+    }));
+    for (let i = mapped.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [mapped[i], mapped[j]] = [mapped[j], mapped[i]];
+    }
+    this.quizState.currentOptions = mapped;
+    this.quizState.answered = false;
+  },
+
+  async renderQuizQuestion() {
+    const q = this.quizState.pool[this.quizState.index];
+    const main = document.getElementById("main-view");
+    const qImg = await ImageStore.get(q.question_img);
+
+    const typeLabel = q.type === "formula_to_name"
+      ? "Формула → Название"
+      : q.type === "name_to_formula"
+        ? "Название → Формула"
+        : "Теория / Практика";
+
+    main.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span class="badge badge-primary">Вопрос ${this.quizState.index + 1} из ${this.quizState.pool.length}</span>
+        ${this.quizState.timerSec > 0 ? `<span class="badge badge-warning" id="quiz-timer-badge">${this.formatTime(this.quizState.timerSec)}</span>` : ""}
+        <span class="badge">${typeLabel}</span>
+      </div>
+
+      <div class="card-box">
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">
+          Тема: ${this.escape(q.category)} • Билет №${q.ticket}
+        </div>
+        <div style="font-size:1.1rem; font-weight:700; margin-bottom:10px;">
+          ${this.escape(q.question)}
+        </div>
+        ${qImg ? `<img src="${qImg}" class="formula-img" alt="Формула вопроса">` : ""}
+      </div>
+
+      <div id="quiz-options">
+        ${this.quizState.currentOptions.map((opt, idx) => `
+          <button class="option-btn" id="opt-btn-${idx}" onclick="App.answerQuiz(${idx})">
+            <span style="font-weight:700; color:var(--primary); margin-right:6px;">${ idx + 1 }.</span>
+            <span class="${q.type === 'name_to_formula' ? 'formula-text' : ''}" style="${q.type === 'name_to_formula' ? 'font-size:0.95rem; padding:4px 8px;' : ''}">
+              ${this.escape(opt.text)}
+            </span>
+          </button>
+        `).join("")}
+      </div>
+
+      <div id="quiz-feedback"></div>
+    `;
+  },
+
+  answerQuiz(selectedIdx) {
+    if (this.quizState.answered) return;
+    this.quizState.answered = true;
+
+    const q = this.quizState.pool[this.quizState.index];
+    const chosen = this.quizState.currentOptions[selectedIdx];
+    const isRight = chosen.isCorrect;
+
+    // Статистика по категориям
+    if (!this.progress.categoryStats[q.category]) {
+      this.progress.categoryStats[q.category] = { total: 0, errors: 0 };
+    }
+    this.progress.categoryStats[q.category].total += 1;
+
+    if (isRight) {
+      this.quizState.score += 1;
+      // Удаляем из списка ошибок при правильном ответе
+      this.progress.wrongQuestions = this.progress.wrongQuestions.filter(id => id !== q.id);
+    } else {
+      this.progress.categoryStats[q.category].errors += 1;
+      if (!this.progress.wrongQuestions.includes(q.id)) {
+        this.progress.wrongQuestions.push(q.id);
+      }
+      this.quizState.mistakes.push({
+        question: q,
+        chosenText: chosen.text,
+        correctText: q.options[q.correct]
+      });
+    }
+    this.saveState();
+
+    this.quizState.currentOptions.forEach((opt, idx) => {
+      const btn = document.getElementById(`opt-btn-${idx}`);
+      if (!btn) return;
+      if (opt.isCorrect) btn.classList.add("correct");
+      else if (idx === selectedIdx) btn.classList.add("wrong");
+    });
+
+    const fb = document.getElementById("quiz-feedback");
+    fb.innerHTML = `
+      <div class="card-box" style="border-color:${isRight ? 'var(--success)' : 'var(--danger)'}; margin-top:8px;">
+        <div style="font-weight:700; color:${isRight ? 'var(--success)' : 'var(--danger)'}; margin-bottom:4px;">
+          ${isRight ? "✓ Верно!" : "✗ Ошибка"}
+        </div>
+        <div style="font-size:0.92rem; margin-bottom:10px;">
+          ${this.escape(q.explanation || "")}
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <button class="btn-secondary btn-sm" onclick="App.navigate('tickets', {ticketId:${q.ticket}})">
+            Билет №${q.ticket}
+          </button>
+          <button class="btn-primary" onclick="App.nextQuizQuestion()">
+            Далее →
+          </button>
+        </div>
+      </div>
+    `;
+  },
+
+  nextQuizQuestion() {
+    this.quizState.index += 1;
+    if (this.quizState.index < this.quizState.pool.length) {
+      this.prepareCurrentOptions();
+    }
+    this.renderQuiz();
+  },
+
+  stopQuiz() {
+    if (this.quizState.timerId) clearInterval(this.quizState.timerId);
+    this.quizState.active = false;
+    this.renderQuiz();
+  },
+
+  renderQuizResults() {
+    if (this.quizState.timerId) clearInterval(this.quizState.timerId);
+    const total = this.quizState.pool.length;
+    const score = this.quizState.score;
+    const pct = total ? Math.round((score / total) * 100) : 0;
+
+    const main = document.getElementById("main-view");
+    main.innerHTML = `
+      <div class="card-box" style="text-align:center;">
+        <div class="stat-num" style="font-size:2.4rem;">${pct}%</div>
+        <div style="font-weight:700; margin:4px 0 12px;">Правильных ответов: ${score} из ${total}</div>
+        <button class="btn-primary btn-block" onclick="App.stopQuiz()">Вернуться к выбору режима</button>
+      </div>
+
+      ${this.quizState.mistakes.length > 0 ? `
+        <h3 style="font-size:1rem; margin:16px 0 8px;">Разбор ошибок (${this.quizState.mistakes.length}):</h3>
+        ${this.quizState.mistakes.map(m => `
+          <div class="card-box">
+            <div style="font-weight:700; margin-bottom:6px;">${this.escape(m.question.question)}</div>
+            <div style="font-size:0.88rem; color:var(--danger);">Ваш ответ: ${this.escape(m.chosenText)}</div>
+            <div style="font-size:0.88rem; color:var(--success); margin-bottom:6px;">Правильно: ${this.escape(m.correctText)}</div>
+            <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:8px;">${this.escape(m.question.explanation)}</div>
+            <button class="btn-secondary btn-sm" onclick="App.navigate('tickets', {ticketId:${m.question.ticket}})">
+              Перейти к билету №${m.question.ticket} →
+            </button>
+          </div>
+        `).join("")}
+      ` : `<div class="card-box" style="text-align:center; color:var(--success); font-weight:700;">Безупречно! Ошибок нет.</div>`}
+    `;
+  },
+
+  formatTime(sec) {
+    const m = Math.floor(Math.max(0, sec) / 60);
+    const s = Math.max(0, sec) % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  },
+
+  /* ========================================================================
+     ЭКРАН 4: ЭКЗАМЕНАЦИОННЫЕ БИЛЕТЫ
+     ======================================================================== */
+  renderTickets() {
+    const main = document.getElementById("main-view");
+
+    // Если открыт конкретный билет
+    if (this.ticketState.selectedId !== null) {
+      const ticket = this.dbData.tickets.find(t => t.id === this.ticketState.selectedId);
+      if (!ticket) {
+        this.ticketState.selectedId = null;
+        this.renderTickets();
+        return;
+      }
+      document.getElementById("header-title").textContent = `Билет №${ticket.id}`;
+      document.getElementById("header-actions").innerHTML = `
+        <button class="btn-secondary btn-sm" onclick="App.ticketState.selectedId=null; App.renderTickets();">← К списку</button>
+      `;
+
+      const st = this.progress.ticketsStatus[ticket.id];
+      const isFav = !!this.progress.ticketsFav[ticket.id];
+
+      main.innerHTML = `
+        <div class="card-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span class="badge ${ticket.section === 'practice' ? 'badge-warning' : 'badge-primary'}">
+              ${ticket.section === "practice" ? "Практический навык / Метод" : "Теоретический вопрос"}
+            </span>
+            <button class="btn-secondary btn-sm" onclick="App.toggleTicketFav(${ticket.id})">
+              ${isFav ? "★ В избранном" : "☆ В избранное"}
+            </button>
+          </div>
+
+          <h2 style="font-size:1.15rem; margin:0 0 14px;" class="selectable">${this.escape(ticket.title)}</h2>
+          <div class="answer-content selectable">${this.escape(ticket.answer)}</div>
+        </div>
+
+        <div class="grid-2">
+          <button class="${st === 'repeat' ? 'btn-warning' : 'btn-secondary'}" onclick="App.setTicketStatus(${ticket.id}, 'repeat')">
+            🔄 Повторить
+          </button>
+          <button class="${st === 'learned' ? 'btn-success' : 'btn-secondary'}" onclick="App.setTicketStatus(${ticket.id}, 'learned')">
+            ✓ Выучено
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    // Список всех билетов
+    document.getElementById("header-title").textContent = "Экзаменационные билеты";
+    document.getElementById("header-actions").innerHTML = "";
+
+    const q = this.ticketState.search.trim().toLowerCase();
+    const list = this.dbData.tickets.filter(t => {
+      if (this.ticketState.section !== "all" && t.section !== this.ticketState.section) return false;
+      if (this.ticketState.onlyFav && !this.progress.ticketsFav[t.id]) return false;
+      if (q && !(t.title.toLowerCase().includes(q) || t.answer.toLowerCase().includes(q))) return false;
+      return true;
+    });
+
+    main.innerHTML = `
+      <input type="search" id="ticket-search" placeholder="Поиск по вопросу или тексту ответа..."
+             value="${this.escapeAttr(this.ticketState.search)}" oninput="App.onTicketSearch(this.value)">
+
+      <div class="chip-row">
+        <button class="chip ${this.ticketState.section === 'all' ? 'active' : ''}" onclick="App.setTicketSection('all')">Все (${this.dbData.tickets.length})</button>
+        <button class="chip ${this.ticketState.section === 'practice' ? 'active' : ''}" onclick="App.setTicketSection('practice')">Практика</button>
+        <button class="chip ${this.ticketState.section === 'theory' ? 'active' : ''}" onclick="App.setTicketSection('theory')">Теория</button>
+        <button class="chip ${this.ticketState.onlyFav ? 'active' : ''}" onclick="App.toggleTicketFavFilter()">★ Избранные</button>
+      </div>
+
+      <div id="ticket-list">
+        ${list.length === 0 ? `<div class="card-box" style="text-align:center;">Билеты не найдены</div>` : list.map(t => {
+          const st = this.progress.ticketsStatus[t.id];
+          const fav = this.progress.ticketsFav[t.id];
+          return `
+            <div class="ticket-item" onclick="App.openTicket(${t.id})">
+              <div style="flex:1;">
+                <div style="display:flex; gap:6px; align-items:center; margin-bottom:4px;">
+                  <span class="badge ${t.section === 'practice' ? 'badge-warning' : 'badge-primary'}">
+                    ${t.section === 'practice' ? 'Практика' : 'Теория'}
+                  </span>
+                  ${st === 'learned' ? `<span class="badge badge-success">Выучено</span>` : ""}
+                  ${st === 'repeat' ? `<span class="badge badge-warning">Повторить</span>` : ""}
+                  ${fav ? `<span style="color:var(--warning);">★</span>` : ""}
+                </div>
+                <div style="font-weight:600; font-size:0.95rem;">${this.escape(t.title)}</div>
+              </div>
+              <span style="color:var(--text-muted); font-weight:700;">›</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  },
+
+  onTicketSearch(val) {
+    this.ticketState.search = val;
+    this.renderTickets();
+    const input = document.getElementById("ticket-search");
+    if (input) {
+      input.focus();
+      input.setSelectionRange(val.length, val.length);
+    }
+  },
+
+  setTicketSection(sec) {
+    this.ticketState.section = sec;
+    this.renderTickets();
+  },
+
+  toggleTicketFavFilter() {
+    this.ticketState.onlyFav = !this.ticketState.onlyFav;
+    this.renderTickets();
+  },
+
+  openTicket(id) {
+    this.ticketState.selectedId = id;
+    this.progress.lastRoute = { tab: "tickets", ticketId: id };
+    this.saveState();
+    this.renderTickets();
+  },
+
+  setTicketStatus(id, status) {
+    if (this.progress.ticketsStatus[id] === status) {
+      delete this.progress.ticketsStatus[id];
+    } else {
+      this.progress.ticketsStatus[id] = status;
+    }
+    this.saveState();
+    this.renderTickets();
+  },
+
+  toggleTicketFav(id) {
+    if (this.progress.ticketsFav[id]) delete this.progress.ticketsFav[id];
+    else this.progress.ticketsFav[id] = true;
+    this.saveState();
+    this.renderTickets();
+  },
+
+  /* ========================================================================
+     ЭКРАН 5: ЕЩЁ (НАСТРОЙКИ, ИМПОРТ/ЭКСПОРТ JSON, DEMO-ДАННЫЕ)
+     ======================================================================== */
+  renderMore() {
+    document.getElementById("header-title").textContent = "Настройки и база";
+    document.getElementById("header-actions").innerHTML = "";
+
+    const { theme, fontScale } = this.progress.settings;
+    const demoCount = this.dbData.tickets.filter(t => t.demo).length +
+                      this.dbData.cards.filter(c => c.demo).length +
+                      this.dbData.questions.filter(q => q.demo).length;
+
+    const main = document.getElementById("main-view");
+    main.innerHTML = `
+      <div class="card-box">
+        <h3 style="margin:0 0 10px;">Оформление и шрифт</h3>
+        <label style="font-size:0.85rem; color:var(--text-muted);">Тема интерфейса</label>
+        <div class="grid-3" style="margin-bottom:14px;">
+          <button class="${theme === 'auto' ? 'btn-primary' : 'btn-secondary'}" onclick="App.setTheme('auto')">Системная</button>
+          <button class="${theme === 'light' ? 'btn-primary' : 'btn-secondary'}" onclick="App.setTheme('light')">Светлая</button>
+          <button class="${theme === 'dark' ? 'btn-primary' : 'btn-secondary'}" onclick="App.setTheme('dark')">Тёмная</button>
+        </div>
+
+        <label style="font-size:0.85rem; color:var(--text-muted);">Размер шрифта</label>
+        <div class="grid-3">
+          <button class="${fontScale === 0.92 ? 'btn-primary' : 'btn-secondary'}" onclick="App.setFontScale(0.92)">Компакт</button>
+          <button class="${fontScale === 1 ? 'btn-primary' : 'btn-secondary'}" onclick="App.setFontScale(1)">Стандарт</button>
+          <button class="${fontScale === 1.12 ? 'btn-primary' : 'btn-secondary'}" onclick="App.setFontScale(1.12)">Крупный</button>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="margin:0 0 8px;">Резервная копия (JSON)</h3>
+        <p style="font-size:0.86rem; color:var(--text-muted); margin-top:0;">
+          Экспортирует все билеты, карточки, тестовые вопросы, сжатые картинки формул из IndexedDB и ваш прогресс в один JSON-файл.
+        </p>
+        <div class="grid-2">
+          <button class="btn-primary" onclick="App.exportJSON()">⬇ Экспорт JSON</button>
+          <label class="btn btn-secondary" style="margin:0;">
+            ⬆ Импорт JSON
+            <input type="file" accept=".json,application/json" style="display:none;" onchange="App.importJSON(event)">
+          </label>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="margin:0 0 8px;">Управление демо-примерами</h3>
+        <p style="font-size:0.86rem; color:var(--text-muted); margin-top:0;">
+          В базе сейчас записей с меткой <code>"demo": true</code>: <b>${demoCount}</b>. Вы можете очистить демо-записи перед загрузкой полного файла своих билетов или вернуть исходные.
+        </p>
+        <div class="grid-2">
+          <button class="btn-secondary" onclick="App.removeDemoData()">Удалить demo</button>
+          <button class="btn-danger" onclick="App.resetAllData()">Сброс к исходным</button>
+        </div>
+      </div>
+    `;
+  },
+
+  setTheme(theme) {
+    this.progress.settings.theme = theme;
+    this.applySettings();
+    this.saveState();
+    this.renderMore();
+  },
+
+  setFontScale(scale) {
+    this.progress.settings.fontScale = scale;
+    this.applySettings();
+    this.saveState();
+    this.renderMore();
+  },
+
+  async exportJSON() {
+    try {
+      const images = await ImageStore.getAll();
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        tickets: this.dbData.tickets,
+        cards: this.dbData.cards,
+        questions: this.dbData.questions,
+        progress: this.progress,
+        images
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biochem-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.toast("Экспорт JSON выполнен");
+    } catch (e) {
+      this.toast("Ошибка при экспорте JSON");
+    }
+  },
+
+  async importJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      if (Array.isArray(parsed.tickets)) this.dbData.tickets = parsed.tickets;
+      if (Array.isArray(parsed.cards)) this.dbData.cards = parsed.cards;
+      if (Array.isArray(parsed.questions)) this.dbData.questions = parsed.questions;
+      if (parsed.progress) this.progress = Object.assign(this.progress, parsed.progress);
+
+      if (parsed.images && typeof parsed.images === "object") {
+        for (const [k, v] of Object.entries(parsed.images)) {
+          await ImageStore.save(k, v);
+        }
+      }
+
+      this.saveState();
+      this.applySettings();
+      this.rebuildCardDeck();
+      this.renderMore();
+      this.toast("База и прогресс успешно импортированы!");
+    } catch (err) {
+      this.toast("Ошибка чтения JSON-файла");
+    }
+  },
+
+  removeDemoData() {
+    this.dbData.tickets = this.dbData.tickets.filter(t => !t.demo);
+    this.dbData.cards = this.dbData.cards.filter(c => !c.demo);
+    this.dbData.questions = this.dbData.questions.filter(q => !q.demo);
+    this.saveState();
+    this.rebuildCardDeck();
+    this.renderMore();
+    this.toast("Все записи с demo:true удалены");
+  },
+
+  resetAllData() {
+    this.dbData = JSON.parse(JSON.stringify(DATA));
+    this.progress.ticketsStatus = {};
+    this.progress.leitnerBoxes = {};
+    this.progress.wrongQuestions = [];
+    this.progress.categoryStats = {};
+    this.saveState();
+    this.rebuildCardDeck();
+    this.renderMore();
+    this.toast("Исходные демо-данные восстановлены");
+  },
+
+  escape(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  },
+
+  escapeAttr(str) {
+    return this.escape(str).replace(/'/g, "&#39;");
+  }
+};
+
+window.addEventListener("DOMContentLoaded", () => App.init());
+</script>
+</body>
+</html>
