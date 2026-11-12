@@ -3,7 +3,6 @@ package ru.ufamod.worldgen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -49,7 +48,7 @@ public final class ChunkSink {
         section.setBlockState(x & 15, y & 15, z & 15, s, false);
         long key = BlockPos.asLong(x, y, z);
         Block b = s.getBlock();
-        if (b instanceof StairBlock || b instanceof CrossCollisionBlock || b instanceof WallBlock || b instanceof FenceGateBlock || b instanceof ChestBlock)
+        if (b instanceof StairBlock || b instanceof CrossCollisionBlock || b instanceof WallBlock || b instanceof FenceGateBlock)
             shaped.add(key);
         else if (!shaped.isEmpty()) shaped.remove(key);
         if (s.hasBlockEntity()) {

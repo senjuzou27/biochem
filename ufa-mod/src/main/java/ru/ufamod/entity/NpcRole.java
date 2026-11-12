@@ -13,7 +13,8 @@ public enum NpcRole {
     COMMISSAR("commissar", 1),
     SOLDIER("soldier", 1),
     SERGEANT("sergeant", 1),
-    RECRUIT("recruit", 1);
+    RECRUIT("recruit", 1),
+    DRIVER("citizen", 4);
 
     public final String skin;
     public final int variants;

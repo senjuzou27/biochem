@@ -175,7 +175,7 @@ public final class Style {
                 s.trim = s.wall == Blocks.BRICKS ? Blocks.SMOOTH_STONE : Blocks.LIGHT_GRAY_TERRACOTTA;
                 s.groundHeight = s.storeyHeight = 3;
                 s.period = 3;
-                s.windowAt = new boolean[]{true, true, false};
+                s.windowAt = new boolean[]{false, true, true};
                 s.flat = true;
                 s.balconies = true;
                 s.door = Blocks.SPRUCE_DOOR;
@@ -187,7 +187,7 @@ public final class Style {
                 s.trim = Blocks.LIGHT_GRAY_CONCRETE;
                 s.groundHeight = s.storeyHeight = 3;
                 s.period = 3;
-                s.windowAt = new boolean[]{true, true, false};
+                s.windowAt = new boolean[]{false, true, true};
                 s.flat = true;
                 s.loggias = true;
                 s.door = Blocks.IRON_DOOR;

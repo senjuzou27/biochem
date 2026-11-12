@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod;
 import ru.ufamod.UfaMod;
 import ru.ufamod.quest.QuestManager;
 import ru.ufamod.quest.Stage;
+import ru.ufamod.world.Places;
 import ru.ufamod.world.Plan;
 
 import java.util.Arrays;
@@ -25,18 +26,21 @@ import java.util.Map;
 public final class UfaCommand {
     private UfaCommand() {}
 
-    private static final Map<String, BlockPos> PLACES = new LinkedHashMap<>();
-
-    static {
-        PLACES.put("dorm", Plan.w(337, 1, 38));
-        PLACES.put("bsmu", Plan.w(326, 1, 386));
-        PLACES.put("gostiny", Plan.w(300, 1, 134));
-        PLACES.put("opera", Plan.w(326, 1, 280));
-        PLACES.put("park", Plan.w(384, 1, 462));
-        PLACES.put("salavat", Plan.w(70, 1, 596));
-        PLACES.put("friendship", Plan.w(598, 1, 598));
-        PLACES.put("sovetskaya", Plan.w(480, 1, 340));
-        PLACES.put("camp", new BlockPos(Plan.CAMP_OX + 30, Plan.BASE_Y + 1, Plan.CAMP_OZ + 80));
+    private static Map<String, BlockPos> places() {
+        Places p = Places.get();
+        Map<String, BlockPos> m = new LinkedHashMap<>();
+        m.put("dorm", p.dormOut);
+        m.put("bsmu", p.bsmuDoor);
+        m.put("anatomy", p.examOut);
+        m.put("library", p.library);
+        m.put("gostiny", p.gostiny);
+        m.put("opera", p.opera);
+        m.put("park", p.park);
+        m.put("artkvadrat", p.artKvadrat);
+        m.put("salavat", p.salavat);
+        m.put("friendship", p.friendship);
+        m.put("camp", new BlockPos(Plan.CAMP_OX + 30, Plan.BASE_Y + 1, Plan.CAMP_OZ + 80));
+        return m;
     }
 
     @SubscribeEvent
@@ -48,11 +52,11 @@ public final class UfaCommand {
                 .then(Commands.literal("free").executes(c -> run(c.getSource(), QuestManager::free)))
                 .then(Commands.literal("leave").executes(c -> run(c.getSource(), QuestManager::leave)))
                 .then(Commands.literal("tp").then(Commands.argument("place", StringArgumentType.word())
-                        .suggests((c, b) -> SharedSuggestionProvider.suggest(PLACES.keySet(), b))
+                        .suggests((c, b) -> SharedSuggestionProvider.suggest(places().keySet(), b))
                         .executes(c -> {
-                            BlockPos pos = PLACES.get(StringArgumentType.getString(c, "place"));
+                            BlockPos pos = places().get(StringArgumentType.getString(c, "place"));
                             if (pos == null) {
-                                c.getSource().sendFailure(Component.literal("Места: " + String.join(", ", PLACES.keySet())));
+                                c.getSource().sendFailure(Component.literal("Места: " + String.join(", ", places().keySet())));
                                 return 0;
                             }
                             return run(c.getSource(), p -> QuestManager.teleport(p, pos));

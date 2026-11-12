@@ -3,20 +3,23 @@ package ru.ufamod.dev;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.projectile.Arrow;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import ru.ufamod.UfaMod;
+import ru.ufamod.city.CityData;
+import ru.ufamod.city.Ground;
 import ru.ufamod.entity.NpcEntity;
 import ru.ufamod.entity.NpcRole;
 import ru.ufamod.quest.Loot;
 import ru.ufamod.quest.QuestManager;
 import ru.ufamod.quest.Stage;
 import ru.ufamod.registry.ModItems;
+import ru.ufamod.world.Places;
 import ru.ufamod.world.Plan;
 import ru.ufamod.world.UfaWorld;
 
@@ -34,7 +37,7 @@ public final class AutoTest {
 
     /** Set by the server script, consumed by the client. */
     public static volatile String pendingShot;
-    /** "fail" or "pass": how the client should answer the exam; null = a human answers. */
+    /** "fail" or "pass": how the client should answer the exam; "show" leaves the screen open. */
     public static volatile String examMode;
     public static volatile boolean finished;
 
@@ -50,7 +53,7 @@ public final class AutoTest {
     }
 
     private void shot(String name) {
-        step(160, "screenshot " + name, () -> pendingShot = name);
+        step(200, "screenshot " + name, () -> pendingShot = name);
     }
 
     private void expect(Stage stage) {
@@ -63,28 +66,58 @@ public final class AutoTest {
         });
     }
 
-    private void tp(double x, int localY, double z, float yaw, float pitch) {
-        step(20, "tp " + x + " " + localY + " " + z, () -> {
+    private void tp(double x, double y, double z, float yaw, float pitch) {
+        step(20, "tp " + (int) x + " " + (int) y + " " + (int) z, () -> {
             ServerLevel level = UfaWorld.level(player.server);
-            player.teleportTo(level, x, Plan.BASE_Y + localY, z, yaw, pitch);
+            player.teleportTo(level, x, y, z, yaw, pitch);
         });
+    }
+
+    private void tp(BlockPos p, float yaw, float pitch) {
+        tp(p.getX() + 0.5, p.getY(), p.getZ() + 0.5, yaw, pitch);
+    }
+
+    /** Stands at {@code from} looking at {@code at}. */
+    private void view(BlockPos from, BlockPos at, float pitch) {
+        float yaw = (float) (Mth.atan2(at.getZ() - from.getZ(), at.getX() - from.getX()) * 180.0 / Math.PI) - 90f;
+        tp(from, yaw, pitch);
+    }
+
+    /** The nearest piece of road or pavement to (x, z). */
+    private static BlockPos street(int x, int z) {
+        CityData c = CityData.get();
+        for (int rad = 0; rad < 40; rad++)
+            for (int dx = -rad; dx <= rad; dx++)
+                for (int dz = -rad; dz <= rad; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != rad) continue;
+                    int g = c.ground(x + dx, z + dz);
+                    if ((g == Ground.ROAD || g == Ground.SIDEWALK || g == Ground.PLAZA) && c.building(x + dx, z + dz) == 0)
+                        return new BlockPos(x + dx, c.height(x + dx, z + dz) + 2, z + dz);
+                }
+        return new BlockPos(x, c.height(x, z) + 2, z);
     }
 
     private void talk(NpcRole role) {
         step(60, "talk to " + role, () -> {
-            List<NpcEntity> near = player.level().getEntitiesOfClass(NpcEntity.class, player.getBoundingBox().inflate(14), n -> n.getRole() == role);
+            List<NpcEntity> near = player.level().getEntitiesOfClass(NpcEntity.class, player.getBoundingBox().inflate(16), n -> n.getRole() == role);
             if (near.isEmpty()) {
                 failures++;
                 UfaMod.LOGGER.error("AUTOTEST FAIL: no NPC with role {} near {}", role, player.blockPosition());
-            } else QuestManager.onTalk(player, near.get(0));
+            } else {
+                near.sort((a, b) -> Double.compare(a.distanceToSqr(player), b.distanceToSqr(player)));
+                QuestManager.onTalk(player, near.get(0));
+            }
         });
     }
 
     private void script() {
-        int f2 = Plan.bsFloor(2) + 1, f3 = Plan.bsFloor(3) + 1;
+        Places P = Places.get();
         double cx = Plan.CAMP_OX, cz = Plan.CAMP_OZ;
+        int cy = Plan.BASE_Y + 1;
+        UfaMod.LOGGER.info("AUTOTEST places: wake {} dormOut {} bsmuDoor {} guard {} lecture {} exam {} examOut {} library {} canteen {} salavat {}",
+                P.wake, P.dormOut, P.bsmuDoor, P.guard, P.lecture, P.exam, P.examOut, P.library, P.canteen, P.salavat);
         expect(Stage.WAKE);
-        tp(355.5, 1, 26.5, 90, 10);
+        view(P.wake, P.bed, 15);
         shot("01_dorm_room");
         step(10, "take coat and record book", () -> {
             player.getInventory().add(new ItemStack(ModItems.LAB_COAT.get()));
@@ -93,8 +126,6 @@ public final class AutoTest {
         });
         step(20, "wait", () -> { });
         expect(Stage.BREAKFAST);
-        tp(349.5, 1, 38.5, -90, 5);
-        shot("02_dorm_kitchen");
         step(10, "eat", () -> {
             ItemStack food = new ItemStack(ModItems.ECHPOCHMAK.get());
             player.setItemInHand(InteractionHand.MAIN_HAND, food);
@@ -102,88 +133,75 @@ public final class AutoTest {
             net.minecraftforge.event.ForgeEventFactory.onItemUseFinish(player, new ItemStack(ModItems.ECHPOCHMAK.get()), 0, rest);
         });
         expect(Stage.TO_BSMU);
-        tp(337.5, 1, 44.5, 150, 0);
-        shot("03_dorm_outside");
-        tp(327.5, 1, 90.5, 0, 0);
-        shot("04_lenina_street");
-        tp(306.5, 1, 182.5, 140, -12);
-        shot("05_gostiny_dvor");
-        tp(248.5, 1, 134.5, -90, -15);
-        shot("06_gostiny_inside");
-        tp(334.5, 1, 284.5, 100, -15);
-        shot("07_opera_theatre");
-        tp(341.5, 1, 392.5, 80, -18);
-        step(30, "wait", () -> { });
+        view(P.busFrom.offset(0, 0, 0), P.wake, -25);
+        shot("02_dormitory");
+        talk(NpcRole.DRIVER);
+        step(60, "ride", () -> { });
         expect(Stage.TO_BSMU);
-        shot("08_bsmu_front");
-        tp(318.5, 2, 386.5, 90, 0);
+        view(P.busTo, P.guard, -15);
+        shot("03_bsmu_main_building");
+        tp(P.bsmuDoor, 0, 0);
         step(30, "wait", () -> { });
         expect(Stage.WATCHMAN);
-        tp(311.5, 2, 388.5, 60, 5);
+        view(P.guard.offset(1, 0, 1), P.lecture, 0);
         talk(NpcRole.WATCHMAN);
         expect(Stage.WATCHMAN);
         step(10, "put on the coat", () -> {
             player.getInventory().clearOrCountMatchingItems(s -> s.is(ModItems.LAB_COAT.get()), -1, player.inventoryMenu.getCraftSlots());
             player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.LAB_COAT.get()));
         });
-        shot("09_bsmu_hall_guard");
+        shot("04_bsmu_hall");
         talk(NpcRole.WATCHMAN);
         expect(Stage.LECTURE);
-        tp(296.5, 2, 386.5, 90, -10);
-        shot("10_bsmu_stairs");
-        tp(303.5, f2, 359.5, 180, -8);
-        shot("11_lecture_hall");
+        tp(P.lecture.offset(-2, 0, 0), -90, 5);
+        shot("05_lecture_hall");
         talk(NpcRole.LECTURER);
         expect(Stage.LECTURE_RUNNING);
         step(520, "listen to the lecture", () -> { });
         expect(Stage.TO_EXAM);
-        tp(303.5, f2, 408.5, 0, 5);
-        shot("12_library");
-        tp(309.5, 2, 357.5, 180, 5);
-        shot("13_canteen");
-        tp(303.5, f3, 414.5, 0, 0);
-        shot("14_anatomy_corridor");
-        tp(309.5, f3, 412.5, -60, 5);
-        shot("15_anatomy_museum");
-        tp(303.5, f3, 421.5, 0, 5);
-        shot("16_exam_room");
-        step(10, "exam mode fail", () -> examMode = "show");
+        view(P.library.offset(1, 0, 0), P.library.offset(8, 0, 3), 5);
+        shot("06_national_library");
+        view(P.canteen.offset(1, 0, 0), P.canteen.offset(6, 0, 6), 5);
+        shot("07_canteen");
+        view(P.examOut, P.exam, -15);
+        shot("08_anatomy_department");
+        view(P.exam.offset(1, 0, 1), P.exam.offset(6, 0, 4), 5);
+        shot("09_anatomy_inside");
+        step(10, "exam mode show", () -> examMode = "show");
         talk(NpcRole.PROFESSOR);
         expect(Stage.EXAM_RUNNING);
-        shot("17_exam_screen");
+        shot("10_exam_screen");
         step(20, "answer wrong", () -> examMode = "fail");
         step(60, "wait", () -> { });
         expect(Stage.FAILED);
-        tp(316.5, 2, 386.5, -90, 0);
+        view(P.examOut, P.exam, 0);
         step(40, "wait", () -> { });
         expect(Stage.ARREST);
-        shot("18_arrest");
+        step(10, "turn around", () -> player.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), player.getYRot() + 180f, 0));
+        shot("11_arrest");
         step(200, "wait for the camp", () -> { });
         expect(Stage.CAMP_REPORT);
-        step(10, "look", () -> player.teleportTo(player.serverLevel(), cx + 30.5, Plan.BASE_Y + 1, cz + 80.5, -90, 0));
-        shot("19_camp_parade_ground");
+        tp(cx + 30.5, cy, cz + 80.5, -90, 0);
+        shot("12_camp");
         talk(NpcRole.SERGEANT);
         expect(Stage.CAMP_COURSE);
-        step(20, "tp", () -> player.teleportTo(player.serverLevel(), cx + 64.5, Plan.BASE_Y + 1, cz + 27.5, -90, 5));
-        shot("20_camp_obstacle_course");
-        step(20, "tp", () -> player.teleportTo(player.serverLevel(), cx + 145.5, Plan.BASE_Y + 1, cz + 27.5, 90, 0));
+        tp(cx + 145.5, cy, cz + 27.5, 90, 0);
         step(30, "wait", () -> { });
         expect(Stage.CAMP_RANGE);
-        step(20, "tp", () -> player.teleportTo(player.serverLevel(), cx + 70.5, Plan.BASE_Y + 1, cz + 64.5, -90, 0));
-        shot("21_camp_range");
+        tp(cx + 70.5, cy, cz + 64.5, -90, 0);
         for (int i = 0; i < 5; i++) {
             final int n = i;
             step(25, "shoot target " + n, () -> {
                 int tx = 98 + (n % 2) * 8, tz = 58 + n * 3;
                 Arrow arrow = new Arrow(player.level(), player);
-                arrow.setPos(cx + tx - 4, Plan.BASE_Y + 2.5, cz + tz + 0.5);
+                arrow.setPos(cx + tx - 4, cy + 1.5, cz + tz + 0.5);
                 arrow.shoot(1, 0, 0, 2.5f, 0);
                 player.level().addFreshEntity(arrow);
             });
         }
         step(40, "wait", () -> { });
         expect(Stage.CAMP_TRENCH);
-        step(20, "tp", () -> player.teleportTo(player.serverLevel(), cx + 100.5, Plan.BASE_Y + 1, cz + 112.5, 90, 20));
+        tp(cx + 100.5, cy, cz + 112.5, 90, 20);
         step(10, "dig", () -> {
             for (int i = 0; i < player.getInventory().getContainerSize(); i++)
                 if (player.getInventory().getItem(i).is(ModItems.SAPPER_SHOVEL.get())) {
@@ -193,50 +211,65 @@ public final class AutoTest {
                     break;
                 }
             for (int i = 0; i < 12; i++) {
-                BlockPos pos = new BlockPos((int) cx + 96 + i % 4, Plan.BASE_Y, (int) cz + 114 + i / 4);
+                BlockPos pos = new BlockPos((int) cx + 96 + i % 4, cy - 1, (int) cz + 114 + i / 4);
                 if (!player.gameMode.destroyBlock(pos)) UfaMod.LOGGER.error("AUTOTEST FAIL: could not dig {} ({})", pos, player.level().getBlockState(pos));
             }
         });
-        shot("22_camp_trench");
         expect(Stage.CAMP_TRUCK);
-        step(20, "tp", () -> player.teleportTo(player.serverLevel(), cx + 7.5, Plan.BASE_Y + 1, cz + 119.5, -60, 0));
-        shot("23_camp_truck");
-        step(20, "board", () -> player.teleportTo(player.serverLevel(), cx + 16.5, Plan.BASE_Y + 3, cz + 124.5, 90, 0));
+        tp(cx + 16.5, cy + 2, cz + 124.5, 90, 0);
         step(30, "wait", () -> { });
         expect(Stage.END_SVO);
-        shot("24_bad_ending");
 
         // ---- second run: the good ending
         step(20, "restart", () -> QuestManager.start(player));
         expect(Stage.WAKE);
         step(10, "skip to the exam", () -> QuestManager.forceStage(player, Stage.TO_EXAM));
-        tp(303.5, f3, 426.5, 0, 0);
+        tp(P.exam.offset(1, 0, 1), 0, 0);
         step(10, "exam mode pass", () -> examMode = "pass");
         talk(NpcRole.PROFESSOR);
         step(80, "wait", () -> { });
         expect(Stage.PASSED);
-        tp(70.5, 1, 612.5, 0, -15);
-        step(30, "wait", () -> { });
+        tp(P.busTo, 0, 0);
+        talk(NpcRole.DRIVER);
+        step(60, "ride", () -> { });
         expect(Stage.FREE);
-        shot("25_salavat_good_ending");
-        tp(46.5, 1, 650.5, -120, -10);
-        shot("26_salavat_from_cliff");
-        tp(598.5, 1, 590.5, 0, -25);
-        shot("27_friendship_monument");
-        tp(384.5, 1, 470.5, 0, 0);
-        shot("28_lenin_park");
-        tp(360.5, 1, 590.5, 0, -15);
-        shot("29_house_of_republic");
-        tp(250.5, 1, 446.5, 180, -15);
-        shot("30_bsmu_building_2");
-        tp(480.5, 1, 345.5, -40, -10);
-        shot("31_sovetskaya_square");
-        tp(418.5, 1, 150.5, 0, 0);
-        shot("32_art_kvadrat");
-        tp(496.5, 1, 584.5, 0, -20);
-        shot("33_mosque");
-        tp(160.5, 1, 448.5, 150, -15);
-        shot("34_congress_hall_tv_tower");
+        step(10, "walk freely", () -> QuestManager.free(player));
+        view(P.salavat.offset(0, 0, -6), P.salavat.offset(0, 6, 12), -18);
+        shot("13_salavat_yulaev");
+        view(P.salavat.offset(14, 0, 30), P.salavat.offset(0, 8, 12), -20);
+        shot("14_salavat_from_the_river_side");
+        view(P.friendship.offset(0, 0, -8), P.friendship.offset(0, 14, 11), -30);
+        shot("15_friendship_monument");
+        BlockPos gostiny = street(P.gostiny.getX(), P.gostiny.getZ());
+        tp(gostiny, 90, -10);
+        shot("16_gostiny_dvor_square");
+        tp(gostiny, -90, -5);
+        shot("17_lenina_near_gostiny");
+        view(street(P.opera.getX() + 60, P.opera.getZ() - 30), P.opera.offset(0, 6, -40), -12);
+        shot("18_opera_theatre");
+        tp(P.park, 180, 0);
+        shot("19_lenin_park");
+        tp(P.artKvadrat, 0, -5);
+        shot("20_art_kvadrat");
+        tp(street(33, -713), 180, -8);
+        shot("21_lenina_street_north");
+        tp(street(33, -713), 90, -8);
+        shot("22_lenina_street_west_side");
+        tp(street(-600, -300), 0, -10);
+        shot("23_old_quarter");
+        tp(street(900, -900), 45, -12);
+        shot("24_residential_quarter");
+        tp(street(1500, -1200), 200, -12);
+        shot("25_dorm_district");
+        tp(street(700, 300), 135, -10);
+        shot("26_wooden_houses");
+        // high views
+        tp(P.bsmuDoor.getX() + 0.5, P.bsmuDoor.getY() + 70, P.bsmuDoor.getZ() + 0.5, 150, 40);
+        shot("27_centre_from_above");
+        tp(P.gostiny.getX() + 0.5, P.gostiny.getY() + 90, P.gostiny.getZ() + 0.5, -30, 45);
+        shot("28_gostiny_from_above");
+        tp(P.salavat.getX() + 0.5, P.salavat.getY() + 60, P.salavat.getZ() - 60.5, 0, 35);
+        shot("29_river_bank_from_above");
         step(100, "done", () -> {
             UfaMod.LOGGER.info("AUTOTEST FINISHED with {} failure(s)", failures);
             finished = true;
@@ -250,7 +283,12 @@ public final class AutoTest {
             List<ServerPlayer> players = event.getServer().getPlayerList().getPlayers();
             if (players.isEmpty()) return;
             player = players.get(0);
-            script();
+            try {
+                script();
+            } catch (Throwable t) {
+                failures++;
+                UfaMod.LOGGER.error("AUTOTEST FAIL: could not prepare the script", t);
+            }
             wait = 300; // let the client finish loading the world
             UfaMod.LOGGER.info("AUTOTEST started for {}", player.getGameProfile().getName());
             return;
