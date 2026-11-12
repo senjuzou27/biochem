@@ -1,0 +1,21 @@
+{
+  "itemGroup.ufamod": "Уфа: День экзамена",
+  "entity.ufamod.npc": "Житель Уфы",
+  "item.ufamod.lab_coat": "Белый халат",
+  "item.ufamod.lab_coat.desc": "Без халата на пары не пускают",
+  "item.ufamod.record_book": "Зачётная книжка",
+  "item.ufamod.record_book.desc": "ПКМ — посмотреть оценки",
+  "item.ufamod.summons": "Повестка",
+  "item.ufamod.summons.desc": "Явиться в военный комиссариат",
+  "item.ufamod.echpochmak": "Эчпочмак",
+  "item.ufamod.echpochmak.desc": "Треугольный пирожок с мясом и картошкой",
+  "item.ufamod.chak_chak": "Чак-чак",
+  "item.ufamod.chak_chak.desc": "Тесто в башкирском мёде",
+  "item.ufamod.kumis": "Кумыс",
+  "item.ufamod.kumis.desc": "Кобылье молоко. Бодрит перед экзаменом",
+  "item.ufamod.camo_helmet": "Армейская каска",
+  "item.ufamod.camo_jacket": "Камуфляжный китель",
+  "item.ufamod.camo_trousers": "Камуфляжные брюки",
+  "item.ufamod.army_boots": "Берцы",
+  "item.ufamod.sapper_shovel": "Сапёрная лопатка"
+}

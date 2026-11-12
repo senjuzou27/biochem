@@ -1,0 +1,21 @@
+{
+  "itemGroup.ufamod": "Ufa: Exam Day",
+  "entity.ufamod.npc": "Ufa resident",
+  "item.ufamod.lab_coat": "White Lab Coat",
+  "item.ufamod.lab_coat.desc": "No coat, no classes",
+  "item.ufamod.record_book": "Student Record Book",
+  "item.ufamod.record_book.desc": "Right-click to see your grades",
+  "item.ufamod.summons": "Draft Summons",
+  "item.ufamod.summons.desc": "Report to the military commissariat",
+  "item.ufamod.echpochmak": "Echpochmak",
+  "item.ufamod.echpochmak.desc": "A triangular pie with meat and potato",
+  "item.ufamod.chak_chak": "Chak-Chak",
+  "item.ufamod.chak_chak.desc": "Fried dough in Bashkir honey",
+  "item.ufamod.kumis": "Kumis",
+  "item.ufamod.kumis.desc": "Fermented mare's milk",
+  "item.ufamod.camo_helmet": "Army Helmet",
+  "item.ufamod.camo_jacket": "Camouflage Jacket",
+  "item.ufamod.camo_trousers": "Camouflage Trousers",
+  "item.ufamod.army_boots": "Army Boots",
+  "item.ufamod.sapper_shovel": "Entrenching Tool"
+}
