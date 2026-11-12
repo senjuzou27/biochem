@@ -30,11 +30,11 @@ public class CityBuilder extends Build {
         Landmarks lm = new Landmarks(c, city);
         lm.reserveAll();
         city.quarters();
-        city.paintGround();
-        city.streetFurniture();
         lm.buildAll();
         new DormBuilder(c).build();
         new BsmuBuilder(c).build();
+        city.paintGround();
+        city.streetFurniture();
         city.citizens();
         return c;
     }
@@ -79,7 +79,7 @@ public class CityBuilder extends Build {
                     set(x, -8, z, rnd.nextInt(4) == 0 ? Blocks.GRAVEL : Blocks.SAND);
                     fill(x, -7, z, x, -5, z, water);
                     air(x, -4, z, x, 0, z);
-                } else if (z >= RIVER_Z - 16 && x > RIVER_X + 40) {
+                } else if (z >= RIVER_Z - 16 && x > 112) {
                     // The southern bank slopes down to the water in four terraces.
                     int drop = Math.min(4, (z - (RIVER_Z - 16)) / 4 + 1);
                     air(x, 1 - drop, z, x, 0, z);
@@ -134,7 +134,7 @@ public class CityBuilder extends Build {
         int[] ew = {CHERN, KOMM, PUSH, ZV, TUK};
         for (int x = 0; x < SIZE_X; x++)
             for (int z = 0; z < SIZE_Z; z++) {
-                if (inRiver(x, z)) continue;
+                if (inRiver(x, z) || c.get(x, 0, z) != null) continue;
                 switch (kind[x][z]) {
                     case SIDEWALK -> set(x, 0, z, walk);
                     case ROAD -> set(x, 0, z, road);

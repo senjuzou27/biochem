@@ -40,12 +40,15 @@ minecraft {
             // Developer switches: -PufaDump=<dir> renders the city to PNG files, -PufaExit stops the server once the city is built.
             if (project.hasProperty('ufaDump')) systemProperty 'ufamod.dump', project.property('ufaDump')
             if (project.hasProperty('ufaExit')) systemProperty 'ufamod.exitAfterBuild', 'true'
+            // -PufaAuto plays the whole story automatically and takes screenshots (see ru.ufamod.dev.AutoTest).
+            if (project.hasProperty('ufaAuto')) systemProperty 'ufamod.autotest', 'true'
 
             //args "-mixin.config=${mod_id}.mixins.json"
         }
 
         register('client') {
             systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            if (project.hasProperty('ufaWorld')) args '--quickPlaySingleplayer', project.property('ufaWorld')
         }
 
         register('server') {

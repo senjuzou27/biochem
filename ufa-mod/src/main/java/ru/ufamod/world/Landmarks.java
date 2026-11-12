@@ -700,17 +700,17 @@ public class Landmarks extends Build {
     // ------------------------------------------------------------------ Salavat Yulaev
 
     private void salavat() {
-        int cx = 70, cz = 616;
-        // observation platform above the Belaya
-        for (int x = 36; x <= 104; x++)
-            for (int z = TUK + RW + 4; z <= RIVER_Z - 1; z++) {
+        int cx = 70, cz = 632;
+        // observation terrace on the cliff above the Belaya
+        for (int x = 40; x <= 100; x++)
+            for (int z = 604; z <= RIVER_Z - 1; z++) {
                 int d = (x - cx) * (x - cx) + (z - cz) * (z - cz);
-                if (d <= 26 * 26 && c.get(x, 0, z) == null)
-                    set(x, 0, z, d < 10 * 10 ? Blocks.POLISHED_GRANITE : ((x + z) % 2 == 0 ? Blocks.STONE_BRICKS : Blocks.POLISHED_ANDESITE));
+                if (c.get(x, 0, z) == null)
+                    set(x, 0, z, d < 11 * 11 ? Blocks.POLISHED_GRANITE : ((x + z) % 2 == 0 ? Blocks.STONE_BRICKS : Blocks.POLISHED_ANDESITE));
             }
         // path from Tukaeva / Karla Marksa
         for (int x = 70; x <= KM + 2; x++) fill(x, 0, TUK + RW, x, 0, TUK + RW + 3, Blocks.STONE_BRICKS);
-        fill(cx - 2, 0, TUK + RW, cx + 2, 0, cz - 20, Blocks.STONE_BRICKS);
+        fill(cx - 2, 0, TUK + RW, cx + 2, 0, 604, Blocks.STONE_BRICKS);
         // granite pedestal and the 9.8 m horseman facing the river
         fill(cx - 3, 1, cz - 6, cx + 3, 1, cz + 7, Blocks.POLISHED_GRANITE);
         fill(cx - 2, 2, cz - 5, cx + 2, 5, cz + 6, Blocks.POLISHED_GRANITE);
@@ -718,19 +718,19 @@ public class Landmarks extends Build {
         post(cx + 5, 1, cz - 8, rot(N), "Памятник", "Салавату Юлаеву", "1967 г.", "ск. С. Тавасиев");
         post(cx - 5, 1, cz - 8, rot(N), "Высота 9,8 м,", "масса 40 тонн,", "всего три", "точки опоры");
         // railing at the cliff edge, lamps, benches
-        for (int x = 36; x <= 104; x++)
-            if (c.isEmpty(x, 1, RIVER_Z - 1) && c.get(x, 0, RIVER_Z - 1) != null) set(x, 1, RIVER_Z - 1, Blocks.IRON_BARS);
+        fill(40, 1, RIVER_Z - 1, 100, 1, RIVER_Z - 1, Blocks.IRON_BARS);
+        fill(40, 1, 650, 40, 1, RIVER_Z - 1, Blocks.IRON_BARS);
+        fill(100, 1, 650, 100, 1, RIVER_Z - 1, Blocks.IRON_BARS);
         for (int a = 0; a < 8; a++) {
             double t = Math.PI * 2 * a / 8 + 0.4;
             int lx = cx + (int) Math.round(Math.cos(t) * 20), lz = cz + (int) Math.round(Math.sin(t) * 20);
-            if (lz < RIVER_Z - 2) lamp(lx, lz);
+            if (lz < RIVER_Z - 3 && lz > 606) lamp(lx, lz);
         }
-        bench(cx - 12, cz + 18, S);
-        bench(cx + 11, cz + 18, S);
-        for (int i = 0; i < 16; i++) {
-            int x = 34 + rnd.nextInt(74), z = TUK + RW + 4 + rnd.nextInt(60);
-            int d = (x - cx) * (x - cx) + (z - cz) * (z - cz);
-            if (d > 28 * 28 && Math.abs(x - cx) > 4) tree(x, z, Tree.BIRCH);
+        bench(cx - 12, cz + 26, S);
+        bench(cx + 11, cz + 26, S);
+        for (int i = 0; i < 24; i++) {
+            int x = 32 + rnd.nextInt(78), z = TUK + RW + 4 + rnd.nextInt(80);
+            if ((x < 37 || x > 103 || z < 600) && Math.abs(x - cx) > 4) tree(x, z, Tree.BIRCH);
         }
         npc(cx - 9, 1, cz + 10, 180, NpcRole.CITIZEN, "Турист", 2, true);
     }

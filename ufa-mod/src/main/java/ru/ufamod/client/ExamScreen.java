@@ -72,6 +72,16 @@ public class ExamScreen extends Screen {
         super.render(g, mouseX, mouseY, partialTick);
     }
 
+    /** Used by the developer self-test: answers every question right or wrong and hands the ticket in. */
+    public void autoAnswer(boolean correct) {
+        for (int i = 0; i < ticket.length; i++) {
+            int right = ExamQuestions.ALL.get(ticket[i]).correct();
+            answers[i] = (byte) (correct ? right : (right + 1) % 4);
+        }
+        Net.CHANNEL.sendToServer(new SubmitExamPacket(answers));
+        if (minecraft != null) minecraft.setScreen(null);
+    }
+
     @Override
     public boolean shouldCloseOnEsc() {
         return false;

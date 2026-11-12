@@ -5,7 +5,7 @@ public enum NpcRole {
     CITIZEN("citizen", 4),
     STUDENT("student", 2),
     ROOMMATE("student", 2),
-    WATCHMAN("watchman", 1),
+    WATCHMAN("watchman", 2),
     COOK("cook", 1),
     LECTURER("lecturer", 1),
     LIBRARIAN("librarian", 1),

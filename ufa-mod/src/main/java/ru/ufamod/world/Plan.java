@@ -60,8 +60,8 @@ public final class Plan {
     public static final BlockPos LIBRARY = w(303, bsFloor(2) + 1, 424);
 
     // ------------------------------------------------------------------ landmarks
-    public static final BlockPos SALAVAT = w(70, 1, 606);
-    public static final AABB SALAVAT_BOX = box(52, -2, 592, 88, 30, 640);
+    public static final BlockPos SALAVAT = w(70, 1, 620);
+    public static final AABB SALAVAT_BOX = box(44, -2, 606, 96, 30, 663);
     public static final BlockPos FRIENDSHIP = w(598, 1, 608);
     public static final BlockPos GOSTINY = w(250, 1, 140);
     public static final BlockPos OPERA = w(300, 1, 280);
