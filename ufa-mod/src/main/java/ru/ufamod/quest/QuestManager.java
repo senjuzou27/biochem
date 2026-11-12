@@ -544,9 +544,9 @@ public final class QuestManager {
         setStage(player, Stage.ARREST);
         ServerLevel level = player.serverLevel();
         double z = Mth.clamp(player.getZ(), 376, 398);
-        NpcEntity commissar = UfaWorld.spawnNpc(level, Plan.LEN + 2.5, Plan.BASE_Y + 1, z, 90f, NpcRole.COMMISSAR, "Военком", 0, false);
-        NpcEntity s1 = UfaWorld.spawnNpc(level, Plan.LEN + 3.5, Plan.BASE_Y + 1, z - 3, 90f, NpcRole.SOLDIER, "Военный патруль", 0, false);
-        NpcEntity s2 = UfaWorld.spawnNpc(level, Plan.LEN + 3.5, Plan.BASE_Y + 1, z + 3, 90f, NpcRole.SOLDIER, "Военный патруль", 0, false);
+        NpcEntity commissar = UfaWorld.spawnNpc(level, Plan.LEN + 6.5, Plan.BASE_Y + 1, z, 90f, NpcRole.COMMISSAR, "Военком", 0, false);
+        NpcEntity s1 = UfaWorld.spawnNpc(level, Plan.LEN + 8.5, Plan.BASE_Y + 1, z - 3, 90f, NpcRole.SOLDIER, "Военный патруль", 0, false);
+        NpcEntity s2 = UfaWorld.spawnNpc(level, Plan.LEN + 8.5, Plan.BASE_Y + 1, z + 3, 90f, NpcRole.SOLDIER, "Военный патруль", 0, false);
         for (NpcEntity npc : new NpcEntity[]{commissar, s1, s2}) {
             if (npc == null) continue;
             npc.setLifetime(20 * 20);
