@@ -195,6 +195,8 @@ public final class QuestManager {
         player.removeAllEffects();
         player.setHealth(player.getMaxHealth());
         player.getFoodData().setFoodLevel(12);
+        player.setExperienceLevels(0);
+        player.setExperiencePoints(0);
         player.setGameMode(GameType.ADVENTURE);
         server.overworld().setDayTime(1000);
         server.overworld().setWeatherParameters(24000 * 3, 0, false, false);
@@ -524,7 +526,7 @@ public final class QuestManager {
         fw.putByte("Flight", (byte) 1);
         rocket.getOrCreateTag().put("Fireworks", fw);
         for (int i = 0; i < 3; i++)
-            player.level().addFreshEntity(new FireworkRocketEntity(player.level(), player.getX() + i - 1, player.getY() + 1, player.getZ() + (i % 2), rocket));
+            player.level().addFreshEntity(new FireworkRocketEntity(player.level(), player.getX() + (i - 1) * 3, player.getY() + 7, player.getZ() + 3, rocket));
     }
 
     private static void goodEnding(ServerPlayer player) {

@@ -101,8 +101,9 @@ public class NpcEntity extends PathfinderMob {
         }
         if (follow != null && tickCount % 10 == 0) {
             Player target = level().getPlayerByUUID(follow);
-            if (target != null && distanceToSqr(target) > 6.0) getNavigation().moveTo(target, 1.1);
-            else getNavigation().stop();
+            // come up to the player but keep a polite three blocks away
+            if (target != null && distanceToSqr(target) > 16.0) getNavigation().moveTo(target, 1.1);
+            else if (target == null || distanceToSqr(target) < 10.0) getNavigation().stop();
         }
     }
 

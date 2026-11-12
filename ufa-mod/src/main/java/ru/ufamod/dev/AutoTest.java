@@ -112,7 +112,7 @@ public final class AutoTest {
         shot("06_gostiny_inside");
         tp(334.5, 1, 284.5, 100, -15);
         shot("07_opera_theatre");
-        tp(336.5, 1, 392.5, 80, -18);
+        tp(341.5, 1, 392.5, 80, -18);
         step(30, "wait", () -> { });
         expect(Stage.TO_BSMU);
         shot("08_bsmu_front");
