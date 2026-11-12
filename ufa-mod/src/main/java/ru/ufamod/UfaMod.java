@@ -10,9 +10,11 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 import ru.ufamod.dev.AutoTest;
 import ru.ufamod.dev.AutoTestClient;
+import ru.ufamod.dev.DevHooks;
 import ru.ufamod.net.Net;
 import ru.ufamod.registry.ModEntities;
 import ru.ufamod.registry.ModItems;
+import ru.ufamod.world.UfaWorld;
 
 /** "Ufa: Exam Day" - a story mod about one day of a medical student in the city of Ufa. */
 @Mod(UfaMod.MODID)
@@ -25,7 +27,9 @@ public class UfaMod {
         ModItems.ITEMS.register(bus);
         ModItems.TABS.register(bus);
         ModEntities.ENTITIES.register(bus);
+        UfaWorld.GENERATORS.register(bus);
         Net.register();
+        if (DevHooks.ENABLED) MinecraftForge.EVENT_BUS.register(new DevHooks());
         if (AutoTest.ENABLED) {
             MinecraftForge.EVENT_BUS.register(new AutoTest());
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.register(new AutoTestClient()));
