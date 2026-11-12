@@ -10,7 +10,7 @@ public final class Net {
 
     private static final String VERSION = "1";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(UfaMod.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
+           new ResourceLocation(UfaMod.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
     public static void register() {
         CHANNEL.registerMessage(0, OpenExamPacket.class, OpenExamPacket::encode, OpenExamPacket::decode, OpenExamPacket::handle);
