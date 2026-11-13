@@ -21,18 +21,20 @@ public final class Places {
     }
 
     public final BlockPos wake, bed, wardrobe, fridge, dormOut, busFrom, busTo, bsmuDoor, guard, lecture, exam, examOut, library, canteen,
-            salavat, friendship, gostiny, opera, park, artKvadrat;
+            salavat, friendship, gostiny, opera, park, artKvadrat, mainDoor;
+    /** Camera positions for the developer self-test. */
+    public final BlockPos dormView, dormLobby, bsmuView, bsmuHall, examHall, canteenHall, libraryHall, mainView, lectureRoom;
     public final int dormIndex, bsmuIndex, anatomyIndex;
     private final CityData city;
 
     private Places() {
         city = CityData.get();
-        for (String role : new String[]{"dorm", "bsmu_main", "bsmu_anatomy", "bsmu_canteen", "library"}) {
+        for (String role : new String[]{"dorm", "bsmu_main", "bsmu_k7", "bsmu_anatomy", "bsmu_canteen", "library"}) {
             BuildingInfo b = city.role(role);
             if (b != null) BuildingCache.get(b);
         }
         dormIndex = index("dorm");
-        bsmuIndex = index("bsmu_main");
+        bsmuIndex = index("bsmu_k7");
         anatomyIndex = index("bsmu_anatomy");
         wake = mark("wake", "dorm");
         bed = mark("bed", "dorm");
@@ -40,14 +42,24 @@ public final class Places {
         fridge = mark("fridge", "dorm");
         dormOut = mark("dorm_out", "dorm");
         busFrom = mark("bus_from", "dorm");
-        busTo = mark("bus_to", "bsmu_main");
-        bsmuDoor = mark("bsmu_door", "bsmu_main");
-        guard = mark("guard", "bsmu_main");
-        lecture = mark("lecture", "bsmu_main");
+        busTo = mark("bus_to", "bsmu_k7");
+        bsmuDoor = mark("bsmu_door", "bsmu_k7");
+        guard = mark("guard", "bsmu_k7");
+        lecture = mark("lecture", "bsmu_k7");
         exam = mark("exam", "bsmu_anatomy");
         examOut = mark("exam_out", "bsmu_anatomy");
         library = mark("library", "library");
         canteen = mark("canteen", "bsmu_canteen");
+        dormView = mark("dorm_view", "dorm");
+        dormLobby = mark("dorm_lobby", "dorm");
+        bsmuView = mark("bsmu_view", "bsmu_k7");
+        bsmuHall = mark("bsmu_hall", "bsmu_k7");
+        examHall = mark("exam_hall", "bsmu_anatomy");
+        canteenHall = mark("canteen_hall", "bsmu_canteen");
+        libraryHall = mark("library_hall", "library");
+        mainDoor = mark("main_door", "bsmu_main");
+        mainView = mark("main_view", "bsmu_main");
+        lectureRoom = mark("lecture_room", "bsmu_k7");
         salavat = spot("salavat", 0, -12);
         friendship = spot("friendship", 0, -11);
         gostiny = spot("gostiny_sq", 0, 0);

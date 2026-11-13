@@ -45,6 +45,8 @@ public final class CityData {
     private final Map<Long, List<BuildingInfo>> buildingsByChunk = new HashMap<>();
     public final Map<String, Integer> roles = new HashMap<>();
     public final Map<String, int[]> spots = new HashMap<>();
+    /** The street network for the bus and the traffic. */
+    public final RoadGraph graph;
     private final Tile outside;
     private final LoadingCache<Long, Tile> tiles;
 
@@ -86,6 +88,7 @@ public final class CityData {
                 for (int cz = (p.z() - r) >> 4; cz <= (p.z() + r) >> 4; cz++)
                     pointsByChunk.computeIfAbsent(ChunkPos.asLong(cx, cz), k -> new ArrayList<>()).add(p);
         }
+        graph = new RoadGraph(meta.getAsJsonObject("graph"));
         JsonObject places = meta.getAsJsonObject("places");
         for (Map.Entry<String, JsonElement> e : places.getAsJsonObject("roles").entrySet()) roles.put(e.getKey(), e.getValue().getAsInt());
         for (Map.Entry<String, JsonElement> e : places.getAsJsonObject("spots").entrySet()) {

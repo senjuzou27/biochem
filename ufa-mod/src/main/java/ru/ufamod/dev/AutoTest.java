@@ -56,6 +56,10 @@ public final class AutoTest {
         step(200, "screenshot " + name, () -> pendingShot = name);
     }
 
+    private void finishRide() {
+        if (player != null && player.getVehicle() instanceof ru.ufamod.entity.VehicleEntity v) v.finishRide();
+    }
+
     private void expect(Stage stage) {
         step(5, "expect " + stage, () -> {
             Stage actual = QuestManager.stage(player);
@@ -70,6 +74,16 @@ public final class AutoTest {
         step(20, "tp " + (int) x + " " + (int) y + " " + (int) z, () -> {
             ServerLevel level = UfaWorld.level(player.server);
             player.teleportTo(level, x, y, z, yaw, pitch);
+        });
+    }
+
+    /** Teleports into the air and keeps the (creative) player hovering there. */
+    private void fly(double x, double y, double z, float yaw, float pitch) {
+        step(20, "fly " + (int) x + " " + (int) y + " " + (int) z, () -> {
+            ServerLevel level = UfaWorld.level(player.server);
+            player.teleportTo(level, x, y, z, yaw, pitch);
+            player.getAbilities().flying = true;
+            player.onUpdateAbilities();
         });
     }
 
@@ -133,44 +147,52 @@ public final class AutoTest {
             net.minecraftforge.event.ForgeEventFactory.onItemUseFinish(player, new ItemStack(ModItems.ECHPOCHMAK.get()), 0, rest);
         });
         expect(Stage.TO_BSMU);
-        view(P.busFrom.offset(0, 0, 0), P.wake, -25);
-        shot("02_dormitory");
+        view(P.dormLobby, P.wake, -20);
+        shot("02_dorm_staircase");
+        view(P.dormView, P.wake, -20);
+        shot("03_dormitory");
+        tp(P.dormOut, 0, 0);
         talk(NpcRole.DRIVER);
-        step(60, "ride", () -> { });
-        expect(Stage.TO_BSMU);
-        view(P.busTo, P.guard, -15);
-        shot("03_bsmu_main_building");
-        tp(P.bsmuDoor, 0, 0);
-        step(30, "wait", () -> { });
+        step(140, "ride", () -> { });
+        shot("03_in_the_bus");
+        step(10, "look out of the window", () -> player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot() + 90f, 5f));
+        step(120, "ride on", () -> { });
+        shot("03_bus_window");
+        step(10, "get there", this::finishRide);
+        step(40, "arrive", () -> { });
         expect(Stage.WATCHMAN);
-        view(P.guard.offset(1, 0, 1), P.lecture, 0);
+        view(P.bsmuView, P.guard, -18);
+        shot("04_bsmu_building_7");
+        view(P.mainView, P.mainDoor, -14);
+        shot("04_bsmu_main_building");
+        view(P.mainDoor, P.mainDoor.offset(-6, 3, 0), -20);
+        shot("04_bsmu_main_entrance");
+        view(P.bsmuHall, P.guard, 0);
         talk(NpcRole.WATCHMAN);
         expect(Stage.WATCHMAN);
         step(10, "put on the coat", () -> {
             player.getInventory().clearOrCountMatchingItems(s -> s.is(ModItems.LAB_COAT.get()), -1, player.inventoryMenu.getCraftSlots());
             player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.LAB_COAT.get()));
         });
-        shot("04_bsmu_hall");
+        shot("05_bsmu_hall");
         talk(NpcRole.WATCHMAN);
         expect(Stage.LECTURE);
-        tp(P.lecture.offset(-2, 0, 0), -90, 5);
-        shot("05_lecture_hall");
+        view(P.lectureRoom, P.lecture, 5);
+        shot("06_biochemistry_class");
         talk(NpcRole.LECTURER);
         expect(Stage.LECTURE_RUNNING);
         step(520, "listen to the lecture", () -> { });
         expect(Stage.TO_EXAM);
-        view(P.library.offset(1, 0, 0), P.library.offset(8, 0, 3), 5);
-        shot("06_national_library");
-        view(P.canteen.offset(1, 0, 0), P.canteen.offset(6, 0, 6), 5);
-        shot("07_canteen");
-        view(P.examOut, P.exam, -15);
-        shot("08_anatomy_department");
-        view(P.exam.offset(1, 0, 1), P.exam.offset(6, 0, 4), 5);
-        shot("09_anatomy_inside");
+        view(P.mainView.offset(4, 0, 40), P.library, -15);
+        shot("07_national_library");
+        view(P.examOut.offset(0, 0, 0), P.exam, -15);
+        shot("09_anatomy_department");
+        view(P.examHall, P.exam, 5);
+        shot("10_anatomy_inside");
         step(10, "exam mode show", () -> examMode = "show");
         talk(NpcRole.PROFESSOR);
         expect(Stage.EXAM_RUNNING);
-        shot("10_exam_screen");
+        shot("11_exam_screen");
         step(20, "answer wrong", () -> examMode = "fail");
         step(60, "wait", () -> { });
         expect(Stage.FAILED);
@@ -178,11 +200,11 @@ public final class AutoTest {
         step(40, "wait", () -> { });
         expect(Stage.ARREST);
         step(10, "turn around", () -> player.teleportTo(player.serverLevel(), player.getX(), player.getY(), player.getZ(), player.getYRot() + 180f, 0));
-        shot("11_arrest");
+        shot("12_arrest");
         step(200, "wait for the camp", () -> { });
         expect(Stage.CAMP_REPORT);
         tp(cx + 30.5, cy, cz + 80.5, -90, 0);
-        shot("12_camp");
+        shot("13_camp");
         talk(NpcRole.SERGEANT);
         expect(Stage.CAMP_COURSE);
         tp(cx + 145.5, cy, cz + 27.5, 90, 0);
@@ -224,33 +246,39 @@ public final class AutoTest {
         step(20, "restart", () -> QuestManager.start(player));
         expect(Stage.WAKE);
         step(10, "skip to the exam", () -> QuestManager.forceStage(player, Stage.TO_EXAM));
-        tp(P.exam.offset(1, 0, 1), 0, 0);
+        tp(P.examHall, 0, 0);
         step(10, "exam mode pass", () -> examMode = "pass");
         talk(NpcRole.PROFESSOR);
         step(80, "wait", () -> { });
         expect(Stage.PASSED);
-        tp(P.busTo, 0, 0);
+        tp(P.bsmuDoor, 0, 0);
         talk(NpcRole.DRIVER);
         step(60, "ride", () -> { });
+        step(10, "get there", this::finishRide);
+        step(40, "arrive", () -> { });
         expect(Stage.FREE);
-        step(10, "walk freely", () -> QuestManager.free(player));
+        step(10, "walk freely", () -> {
+            QuestManager.free(player);
+            player.getAbilities().flying = true;
+            player.onUpdateAbilities();
+        });
         view(P.salavat.offset(0, 0, -6), P.salavat.offset(0, 6, 12), -18);
-        shot("13_salavat_yulaev");
+        shot("14_salavat_yulaev");
         view(P.salavat.offset(14, 0, 30), P.salavat.offset(0, 8, 12), -20);
-        shot("14_salavat_from_the_river_side");
+        shot("15_salavat_from_the_river_side");
         view(P.friendship.offset(0, 0, -8), P.friendship.offset(0, 14, 11), -30);
-        shot("15_friendship_monument");
+        shot("16_friendship_monument");
         BlockPos gostiny = street(P.gostiny.getX(), P.gostiny.getZ());
-        tp(gostiny, 90, -10);
-        shot("16_gostiny_dvor_square");
+        fly(gostiny.getX() + 0.5, gostiny.getY() + 14, gostiny.getZ() + 0.5, 90, 15);
+        shot("17_gostiny_dvor");
         tp(gostiny, -90, -5);
-        shot("17_lenina_near_gostiny");
-        view(street(P.opera.getX() + 60, P.opera.getZ() - 30), P.opera.offset(0, 6, -40), -12);
-        shot("18_opera_theatre");
-        tp(P.park, 180, 0);
-        shot("19_lenin_park");
-        tp(P.artKvadrat, 0, -5);
-        shot("20_art_kvadrat");
+        shot("18_lenina_near_gostiny");
+        BlockPos operaView = street(P.opera.getX() + 70, P.opera.getZ() - 40);
+        float operaYaw = (float) (Mth.atan2(P.opera.getZ() - 40 - operaView.getZ(), P.opera.getX() - operaView.getX()) * 180.0 / Math.PI) - 90f;
+        fly(operaView.getX() + 0.5, operaView.getY() + 12, operaView.getZ() + 0.5, operaYaw, 8);
+        shot("19_opera_theatre");
+        tp(street(P.park.getX(), P.park.getZ() + 40), 180, 0);
+        shot("20_lenin_park");
         tp(street(33, -713), 180, -8);
         shot("21_lenina_street_north");
         tp(street(33, -713), 90, -8);
@@ -264,12 +292,16 @@ public final class AutoTest {
         tp(street(700, 300), 135, -10);
         shot("26_wooden_houses");
         // high views
-        tp(P.bsmuDoor.getX() + 0.5, P.bsmuDoor.getY() + 70, P.bsmuDoor.getZ() + 0.5, 150, 40);
-        shot("27_centre_from_above");
-        tp(P.gostiny.getX() + 0.5, P.gostiny.getY() + 90, P.gostiny.getZ() + 0.5, -30, 45);
-        shot("28_gostiny_from_above");
-        tp(P.salavat.getX() + 0.5, P.salavat.getY() + 60, P.salavat.getZ() - 60.5, 0, 35);
+        fly(P.mainView.getX() + 36.5, P.mainDoor.getY() + 45, P.mainView.getZ() + 0.5, 90, 35);
+        shot("27_bsmu_from_above");
+        fly(P.bsmuView.getX() + 0.5, P.bsmuDoor.getY() + 38, P.bsmuView.getZ() - 14.5, 0, 38);
+        shot("27_building_7_from_above");
+        fly(P.gostiny.getX() + 0.5, P.gostiny.getY() + 80, P.gostiny.getZ() + 60.5, 180, 50);
+        shot("28_centre_from_above");
+        fly(P.salavat.getX() + 0.5, P.salavat.getY() + 50, P.salavat.getZ() - 70.5, 0, 30);
         shot("29_river_bank_from_above");
+        fly(P.dormView.getX() + 0.5, P.dormView.getY() + 60, P.dormView.getZ() + 40.5, 180, 40);
+        shot("30_dorm_district_from_above");
         step(100, "done", () -> {
             UfaMod.LOGGER.info("AUTOTEST FINISHED with {} failure(s)", failures);
             finished = true;

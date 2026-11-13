@@ -346,6 +346,23 @@ def main():
     }
     for name, img in npc.items():
         save(img, "entity", "npc", name + ".png")
+    # vehicles are drawn from plain coloured boxes and only need a white texture
+    save(Image.new("RGBA", (4, 4), (255, 255, 255, 255)), "entity", "white.png")
+    # traffic light head: the model uses the middle six columns of the texture
+    lamps = {"red": (0, (255, 40, 30)), "yellow": (1, (255, 200, 30)), "green": (2, (40, 230, 80))}
+    for name, (lit, colour) in lamps.items():
+        img = Image.new("RGBA", (16, 16), (28, 28, 30, 255))
+        d = ImageDraw.Draw(img)
+        d.rectangle([5, 0, 10, 15], outline=(12, 12, 14, 255))
+        off = [(70, 20, 18), (80, 64, 16), (18, 60, 28)]
+        for i in range(3):
+            c = colour if i == lit else off[i]
+            d.rectangle([6, 1 + i * 5, 9, 4 + i * 5], fill=c + (255,))
+            if i == lit:
+                d.point([(7, 2 + i * 5)], fill=(255, 255, 255, 255))
+        save(img, "block", "traffic_light_%s.png" % name)
+    side = Image.new("RGBA", (16, 16), (28, 28, 30, 255))
+    save(side, "block", "traffic_light_top.png")
     print("textures written to", os.path.normpath(ROOT))
 
 

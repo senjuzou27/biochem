@@ -45,7 +45,7 @@ F_NONE, F_FENCE, F_WALL, F_HEDGE, F_RETAINING, F_WOODFENCE, F_RAIL_GUARD = range
 
 # point kinds (keep in sync with ru.ufamod.city.PointKind)
 P_KINDS = ["tree", "bench", "lamp", "bus_stop", "signals", "fountain", "statue", "bust", "stele", "memorial",
-           "kiosk", "street_sign", "waste", "bicycle", "artwork", "conifer", "birch", "flowers"]
+           "kiosk", "street_sign", "waste", "bicycle", "artwork", "conifer", "birch", "flowers", "car", "xsign"]
 
 
 def box_blur(a, r):
@@ -377,8 +377,18 @@ class City:
         self.water_depth(Hh, water)
         self.H = Hh
 
+        # the paved forecourt between the entrance of BSMU building 1 and the alley on ul. Lenina
+        # (not mapped in OSM, seen on street panoramas)
+        fc = G[-134 - self.z0:-119 - self.z0, 10 - self.x0:31 - self.x0]
+        fc[(fc == GRASS) | (fc == FOREST)] = PLAZA
+
         # ---- points
+        self.Mk = M
         points = self.points(G, B, Hh)
+        # the garden strip in front of BSMU building 1 is planted with blue spruces (seen on street panoramas)
+        for q in points:
+            if P_KINDS[q["k"]] in ("tree", "birch") and 11 <= q["x"] <= 22 and -200 <= q["z"] <= -62:
+                q["k"] = P_KINDS.index("conifer")
         print("points", len(points))
 
         # ---- building records
@@ -402,7 +412,7 @@ class City:
         meta = {
             "version": 1, "tile": TILE, "x0": self.x0, "z0": self.z0, "w": W, "h": H, "waterY": WATER_Y,
             "defaultY": int(np.median(Hh)), "angle": math.degrees(ANGLE),
-            "buildings": brecs, "points": points, "places": places,
+            "buildings": brecs, "points": points, "places": places, "graph": self.graph(G),
             "attribution": "Map data (c) OpenStreetMap contributors, ODbL. Elevation: Mapzen/AWS terrain tiles.",
         }
         with gzip.open(os.path.join(out_dir, "city.json.gz"), "wt", encoding="utf-8") as fh:
@@ -704,7 +714,156 @@ class City:
                         qx, qz = corners[0]
                         nm = sorted(names)
                         add("street_sign", qx, qz, n=nm[0], m=nm[1])
+        self.traffic(G, B, Hh, free, add)
         return pts
+
+    def graph(self, G):
+        """The street network for the bus and the moving cars: nodes [x, z, signal] and edges [a, b, width*10, oneway]."""
+        H, W = G.shape
+        index, nodes, edges = {}, [], []
+        signals = [self.xy[n] for n, (la, lo, t) in self.nodes.items() if t.get("highway") == "traffic_signals" and n in self.xy]
+        degree = {}
+        for r in self.road_info:
+            if r["hw"] == "service":
+                continue
+            for n in r["nds"]:
+                degree[n] = degree.get(n, 0) + (1 if n in (r["nds"][0], r["nds"][-1]) else 2)
+
+        def node(n):
+            if n in index:
+                return index[n]
+            x, z = self.xy[n]
+            ix, iz = int(x - self.x0), int(z - self.z0)
+            if not (8 <= ix < W - 8 and 8 <= iz < H - 8) or G[iz, ix] not in (ROAD, BRIDGE):
+                return -1
+            sig = 0
+            if degree.get(n, 0) >= 3:
+                for (sx, sz) in signals:
+                    if (sx - x) ** 2 + (sz - z) ** 2 < 24 * 24:
+                        sig = 1
+                        break
+            index[n] = len(nodes)
+            nodes.append([int(round(x)), int(round(z)), sig])
+            return index[n]
+
+        for r in self.road_info:
+            if r["hw"] == "service":
+                continue
+            prev = -1
+            for n in r["nds"]:
+                if n not in self.xy:
+                    prev = -1
+                    continue
+                cur = node(n)
+                if prev >= 0 and cur >= 0 and prev != cur:
+                    edges.append([prev, cur, int(round(r["w"] * 10)), 1 if r["oneway"] else 0])
+                prev = cur
+        print("graph nodes", len(nodes), "edges", len(edges), "signal junctions", sum(q[2] for q in nodes))
+        return {"n": [v for q in nodes for v in q], "e": [v for q in edges for v in q]}
+
+    def traffic(self, G, B, Hh, free, add):
+        """Parked cars along the kerbs and on car parks, and signs at pedestrian crossings (as on street panoramas)."""
+        H, W = G.shape
+        M = self.Mk
+        rnd = random.Random(4077)
+        used = np.zeros((H, W), bool)
+        count = {}
+        for r in self.road_info:
+            for n in r["nds"]:
+                count[n] = count.get(n, 0) + 1
+        jgrid = {}
+        for n, c in count.items():
+            if c >= 2 and n in self.xy:
+                x, z = self.xy[n][0] - self.x0, self.xy[n][1] - self.z0
+                jgrid.setdefault((int(x // 16), int(z // 16)), []).append((x, z))
+
+        def near_junction(x, z, rad):
+            gx, gz = int(x // 16), int(z // 16)
+            for dx in (-2, -1, 0, 1, 2):
+                for dz in (-2, -1, 0, 1, 2):
+                    for (jx, jz) in jgrid.get((gx + dx, gz + dz), ()):
+                        if (jx - x) ** 2 + (jz - z) ** 2 < rad * rad:
+                            return True
+            return False
+
+        colours = ["white"] * 5 + ["silver"] * 4 + ["black"] * 3 + ["gray"] * 2 + ["blue", "red", "blue", "cyan", "brown", "green"]
+
+        def park(cx, cz, along_x, allowed):
+            lx, lz = (4, 2) if along_x else (2, 4)
+            ix, iz = int(round(cx - lx / 2)), int(round(cz - lz / 2))
+            if not (4 <= ix and ix + lx < W - 4 and 4 <= iz and iz + lz < H - 4):
+                return False
+            reg = G[iz:iz + lz, ix:ix + lx]
+            if not np.isin(reg, allowed).all() or B[iz:iz + lz, ix:ix + lx].any():
+                return False
+            if np.isin(M[iz:iz + lz, ix:ix + lx], (M_ZEBRA, M_RAIL, M_STOP, M_LINE)).any():
+                return False
+            if used[iz - 2:iz + lz + 2, ix - 2:ix + lx + 2].any():
+                return False
+            hh = Hh[iz:iz + lz, ix:ix + lx]
+            if int(hh.max()) - int(hh.min()) > 0:
+                return False
+            used[iz:iz + lz, ix:ix + lx] = True
+            add("car", ix, iz, d=[1, 0] if along_x else [0, 1], n=rnd.choice(colours))
+            return True
+
+        n_kerb = 0
+        for r in self.road_info:
+            if r["hw"] not in ("residential", "unclassified", "tertiary", "secondary", "service") or r["w"] < 6.5 and r["hw"] != "service":
+                continue
+            if r["hw"] == "service":
+                continue
+            p, w = r["p"], r["w"]
+            chance = 0.22 if r["hw"] == "secondary" else 0.4
+            for (ax, az), (bx, bz) in zip(p, p[1:]):
+                L = math.hypot(bx - ax, bz - az)
+                if L < 8:
+                    continue
+                ux, uz = (bx - ax) / L, (bz - az) / L
+                if max(abs(ux), abs(uz)) < 0.985:
+                    continue
+                nx, nz = -uz, ux
+                t = 4.0
+                while t < L - 4:
+                    cx, cz = ax + ux * t, az + uz * t
+                    if not near_junction(cx, cz, w / 2 + 11):
+                        for side in (-1, 1):
+                            if rnd.random() < chance:
+                                if park(cx + nx * side * (w / 2 - 1.0), cz + nz * side * (w / 2 - 1.0), abs(ux) > abs(uz), (ROAD,)):
+                                    n_kerb += 1
+                    t += 5.5 + rnd.random() * 1.5
+        # car parks: scattered, about half full
+        n_lot = 0
+        ys, xs = np.nonzero(G == PARKING)
+        for k in rnd.sample(range(len(ys)), len(ys) // 30) if len(ys) else ():
+            if park(xs[k] + 0.5, ys[k] + 0.5, rnd.random() < 0.5, (PARKING,)):
+                n_lot += 1
+        # a sign on both sides of every marked crossing
+        n_sign = 0
+        where = {}
+        for r in self.road_info:
+            for i, n in enumerate(r["nds"]):
+                where.setdefault(n, (r, i))
+        for nid, (la, lo, t) in self.nodes.items():
+            if t.get("highway") != "crossing" or nid not in where or nid not in self.xy:
+                continue
+            r, i = where[nid]
+            nds = r["nds"]
+            a = self.xy[nds[max(0, i - 1)]]
+            b = self.xy[nds[min(len(nds) - 1, i + 1)]]
+            L = math.hypot(b[0] - a[0], b[1] - a[1])
+            if L < 0.5:
+                continue
+            ux, uz = (b[0] - a[0]) / L, (b[1] - a[1]) / L
+            x, z = self.xy[nid][0] - self.x0, self.xy[nid][1] - self.z0
+            for side in (-1, 1):
+                for extra in (1.0, 2.0, 3.0):
+                    sx, sz = x - uz * side * (r["w"] / 2 + extra) + ux * 2.5 * side, z + ux * side * (r["w"] / 2 + extra) + uz * 2.5 * side
+                    if free(sx, sz, (SIDEWALK, PLAZA, GRASS)):
+                        add("xsign", sx, sz, d=[round(uz * side, 2), round(-ux * side, 2)])
+                        n_sign += 1
+                        break
+        print("cars at the kerb", n_kerb, "on car parks", n_lot, "crossing signs", n_sign)
 
     def snap_to_sidewalk(self, G, B, x, z):
         best = None
@@ -842,7 +1001,9 @@ class City:
 
         roles = {}
         roles["bsmu_main"] = by_osm[95809664]["i"]
-        roles["bsmu_anatomy"] = containing(9007181319)
+        roles["bsmu_anatomy"] = containing(9007181319)   # building 4, ul. Zaki Validi, 47
+        roles["bsmu_k2"] = by_osm[95809603]["i"]         # building 2, ul. Zaki Validi, 47
+        roles["bsmu_k7"] = by_osm[95809537]["i"]         # building 7, ul. Pushkina, 96/98
         roles["bsmu_canteen"] = containing(9007181217) or containing(518699435)
         roles["dorm"] = containing(9007026017)
         roles["opera"] = by_osm[95399690]["i"]

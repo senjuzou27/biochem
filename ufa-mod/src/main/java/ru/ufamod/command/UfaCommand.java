@@ -30,7 +30,8 @@ public final class UfaCommand {
         Places p = Places.get();
         Map<String, BlockPos> m = new LinkedHashMap<>();
         m.put("dorm", p.dormOut);
-        m.put("bsmu", p.bsmuDoor);
+        m.put("bsmu", p.mainDoor);
+        m.put("k7", p.bsmuDoor);
         m.put("anatomy", p.examOut);
         m.put("library", p.library);
         m.put("gostiny", p.gostiny);

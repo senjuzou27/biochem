@@ -125,15 +125,15 @@ public final class QuestManager {
             case WAKE -> new Objective("07:00 · Возьми из шкафа (сундук в комнате) халат и зачётку", P.wardrobe);
             case BREAKFAST -> new Objective("07:15 · Позавтракай: еда в холодильнике — втором сундуке у двери", P.fridge);
             case TO_BSMU -> dist(player, P.bsmuDoor) > 500
-                    ? new Objective("07:40 · На пары: сядь в маршрутку у входа в общежитие", P.busFrom)
-                    : new Objective("08:10 · Главный корпус БГМУ, ул. Ленина, 3", P.bsmuDoor);
+                    ? new Objective("07:40 · На пары: сядь в автобус у входа в общежитие (поговори с водителем)", P.busFrom)
+                    : new Objective("08:10 · Корпус №7 БГМУ: ул. Пушкина, 96/98 (остановка «Дом актёра»)", P.bsmuDoor);
             case WATCHMAN -> new Objective("08:20 · Надень халат и покажись охраннику на вахте", P.guard);
-            case LECTURE -> new Objective("08:30 · Лекция по биохимии: большая аудитория в центре корпуса", P.lecture);
+            case LECTURE -> new Objective("08:30 · Биохимия: кафедра на 2 этаже, левое крыло (от входа по лестнице)", P.lecture);
             case LECTURE_RUNNING -> new Objective("08:30 · Слушай лекцию…", null);
-            case TO_EXAM -> new Objective("11:00 · Экзамен: кафедра анатомии, корпус №2 (Заки Валиди, 47). Атлас — в Нацбиблиотеке напротив", P.exam);
+            case TO_EXAM -> new Objective("11:00 · Экзамен: кафедра анатомии, корпус №4 (Заки Валиди, 47). Атлас — в Нацбиблиотеке на Ленина, 4", P.exam);
             case EXAM_RUNNING -> new Objective("11:00 · Отвечай на билет", null);
             case PASSED -> dist(player, P.salavat) > 500
-                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: маршрутка у главного корпуса", P.busTo)
+                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: автобус у корпуса №7 на Пушкина", P.busTo)
                     : new Objective("Сдал! Отпразднуй у памятника Салавату Юлаеву", P.salavat);
             case FAILED -> new Objective("Неуд… Выйди на улицу", P.examOut);
             case ARREST -> new Objective("…", null);
@@ -227,9 +227,9 @@ public final class QuestManager {
         setStage(player, Stage.FREE);
         player.setGameMode(GameType.CREATIVE);
         player.removeAllEffects();
-        if (player.level().dimension() != UfaWorld.UFA || player.getX() > 3500) teleport(player, Places.get().bsmuDoor);
+        if (player.level().dimension() != UfaWorld.UFA || player.getX() > 3500) teleport(player, Places.get().mainDoor);
         narrate(player, "Свободная прогулка по Уфе. Режим — творческий. Вернуться к сюжету: /ufa restart");
-        narrate(player, "Быстрые перемещения: /ufa tp bsmu | dorm | anatomy | library | gostiny | opera | park | salavat | friendship | camp");
+        narrate(player, "Быстрые перемещения: /ufa tp bsmu | k7 | dorm | anatomy | library | gostiny | opera | park | salavat | friendship | camp");
     }
 
     public static void leave(ServerPlayer player) {
@@ -274,8 +274,8 @@ public final class QuestManager {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (stage(player) == Stage.BREAKFAST && event.getItem().isEdible()) {
             setStage(player, Stage.TO_BSMU);
-            narrate(player, "Теперь на пары. До главного корпуса на Ленина, 3 почти два километра через центр.");
-            narrate(player, "У входа в общежитие стоит маршрутка — поговори с водителем. Или иди пешком, если не боишься опоздать.");
+            narrate(player, "Теперь на пары. Биохимия — в корпусе №7 на Пушкина, 96/98; до него почти два километра через центр.");
+            narrate(player, "У входа в общежитие ждёт автобус — поговори с водителем. Или иди пешком, если не боишься опоздать.");
         }
     }
 
@@ -332,7 +332,7 @@ public final class QuestManager {
                 Places P = Places.get();
                 if (timer % 10 == 0 && (dist(player, P.bsmuDoor) < 14 || P.insideBuilding(player.getX(), player.getZ(), P.bsmuIndex))) {
                     setStage(player, Stage.WATCHMAN);
-                    narrate(player, "Главный корпус БГМУ. Построен в 1930-е, во время войны здесь работал эвакуированный 1-й Московский мединститут.");
+                    narrate(player, "Корпус №7 БГМУ на Пушкина, 96/98: шесть этажей с мансардой, сдан в 1978–1980 годах. Здесь кафедры биохимии, химии, физики, фармакологии и научная библиотека.");
                     narrate(player, "На вахте пропускной режим: без халата не пустят.");
                 }
             }
@@ -392,7 +392,7 @@ public final class QuestManager {
             "Говорят, Латыпов сегодня злой. Половину потока уже отправил на пересдачу.",
             "Mandibula — нижняя, maxilla — верхняя. Mandibula — нижняя, maxilla — верхняя…",
             "Если завалю — отчислят. А там сам знаешь: отсрочка сгорает, и здравствуй, военкомат.",
-            "В Национальной библиотеке напротив главного корпуса атлас лежит на пюпитре. Сходи, повтори.",
+            "В Национальной библиотеке на Ленина, 4 — напротив корпуса №1 — атлас лежит на пюпитре. Сходи, повтори.",
             "После экзамена — в столовую за эчпочмаком. Если выживем."
     };
 
@@ -410,7 +410,7 @@ public final class QuestManager {
                 } else if (stage == Stage.WATCHMAN) {
                     if (wearsCoat(player)) {
                         setStage(player, Stage.LECTURE);
-                        say(player, name, "Халат вижу, проходи. Лекция в большой аудитории, прямо по коридору, в середине корпуса.");
+                        say(player, name, "Халат вижу, проходи. Биохимия — второй этаж, левое крыло. По лестнице и налево, там табличка.");
                     } else if (has(player, ModItems.LAB_COAT.get())) {
                         say(player, name, "А халат почему в сумке? Надевай — тогда пущу. Порядок есть порядок.");
                     } else {
@@ -474,20 +474,25 @@ public final class QuestManager {
         boolean atDorm = npc.distanceToSqr(P.busFrom.getX() + 0.5, npc.getY(), P.busFrom.getZ() + 0.5) < 40 * 40;
         BlockPos dest;
         if (atDorm) {
-            dest = P.busTo;
+            dest = P.bsmuDoor;
             say(player, name, "До Медуниверситета? Садись. Передаём за проезд!");
-            narrate(player, "Маршрутка летит по Мингажева и Коммунистической, сворачивает на Ленина. Десять минут — и ты у главного корпуса.");
+            narrate(player, "Автобус идёт от Мингажева через центр до остановки «Дом актёра» — она прямо у корпуса №7.");
         } else if (stage == Stage.PASSED) {
             dest = P.salavat;
             say(player, name, "К Салавату? Сдал, значит! Поехали, довезу до самой площадки.");
             narrate(player, "По Заки Валиди, мимо Телецентра — к обрыву над Белой.");
         } else {
-            dest = P.busFrom;
+            dest = P.dormOut;
             say(player, name, "До общежития на Мингажева? Поехали.");
         }
-        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
-        teleport(player, dest);
         player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 0.7f, 1.2f);
+        if (ru.ufamod.traffic.TrafficManager.ride(player, dest)) {
+            narrate(player, "Автобус едет по улицам города. Выйти раньше — клавиша приседания (Shift).");
+        } else {
+            // no way by road: the old instant ride
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
+            teleport(player, dest);
+        }
     }
 
     // ------------------------------------------------------------------ lecture
@@ -498,7 +503,7 @@ public final class QuestManager {
             "Ключевой фермент — фосфофруктокиназа. Его тормозит избыток АТФ: клетка не тратит глюкозу зря.",
             "Без кислорода пируват превращается в лактат. Бактерии зубного налёта делают то же самое —",
             "и получившаяся кислота растворяет эмаль. Так биохимия объясняет кариес. Стоматологам — знать!",
-            "На сегодня всё. У кого экзамен по анатомии — кафедра во втором корпусе, на Заки Валиди, 47. Удачи."
+            "На сегодня всё. У кого экзамен по анатомии — кафедра в четвёртом корпусе, на Заки Валиди, 47. Удачи."
     };
 
     private static void lecture(ServerPlayer player, int timer) {
@@ -508,8 +513,8 @@ public final class QuestManager {
         else {
             data(player).putBoolean("lecture", true);
             setStage(player, Stage.TO_EXAM);
-            narrate(player, "Кафедра анатомии — во флигеле бывшей мужской гимназии (корпус №2), сразу за главным корпусом.");
-            narrate(player, "До экзамена есть время: в Национальной библиотеке через улицу лежит атлас, в столовой БГМУ во дворе кормят.");
+            narrate(player, "Кафедра анатомии — в корпусе №4 на Заки Валиди, 47: через двор университетского городка, мимо столовой, к южной стороне квартала.");
+            narrate(player, "До экзамена есть время: в Национальной библиотеке на Ленина, 4 лежит атлас, в столовой БГМУ во дворе кормят. По пути — корпус №1 с колоннами на аллее улицы Ленина.");
         }
     }
 
