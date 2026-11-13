@@ -33,10 +33,11 @@
 
 | | |
 | --- | --- |
-| ![Главный корпус БГМУ](docs/screenshots/bsmu_main.png) | ![Главный корпус сверху](docs/screenshots/bsmu_from_above.png) |
+| ![Корпус №1 БГМУ, ул. Ленина, 3](docs/screenshots/bsmu_main.png) | ![Корпус №7 БГМУ, ул. Пушкина, 96/98](docs/screenshots/building_7.png) |
+| ![Корпус №1 сверху](docs/screenshots/bsmu_from_above.png) | ![Занятие на кафедре биохимии](docs/screenshots/biochemistry_class.png) |
 | ![Улица Ленина](docs/screenshots/lenina_street.png) | ![Центр сверху](docs/screenshots/centre_from_above.png) |
 | ![Общежитие](docs/screenshots/dormitory.png) | ![Комната в общежитии](docs/screenshots/dorm_room.png) |
-| ![Лекция](docs/screenshots/lecture_hall.png) | ![Памятник Салавату Юлаеву](docs/screenshots/salavat.png) |
+| ![Памятник Салавату Юлаеву](docs/screenshots/salavat.png) | ![Монумент Дружбы](docs/screenshots/friendship_monument.png) |
 
 ## Как играть
 
