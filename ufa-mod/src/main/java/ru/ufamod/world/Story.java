@@ -48,10 +48,48 @@ public final class Story {
         BuildingGenerator.Hints hints = new BuildingGenerator.Hints();
         if (role != null) {
             switch (role) {
-                case "bsmu_main" -> hints.coreOpen = true;
-                case "bsmu_anatomy" -> hints.roomType = "anatomy";
+                case "bsmu_main" -> {
+                    hints.coreOpen = true;
+                    hints.era = ru.ufamod.building.Style.Era.STALIN;
+                    hints.wall = Blocks.SMOOTH_SANDSTONE;
+                    hints.trim = Blocks.SMOOTH_QUARTZ;
+                    hints.portico = true;
+                    hints.levels = 4;
+                }
+                case "opera" -> {
+                    // Aksakov People's House: brick with white details, a portico and a dome
+                    hints.era = ru.ufamod.building.Style.Era.STALIN;
+                    hints.wall = Blocks.BRICKS;
+                    hints.trim = Blocks.SMOOTH_QUARTZ;
+                    hints.portico = true;
+                    hints.dome = true;
+                    hints.pitched = Boolean.FALSE;
+                    hints.roomType = "hall";
+                }
+                case "gostiny" -> {
+                    // yellow trading rows with white arcades
+                    hints.era = ru.ufamod.building.Style.Era.MERCHANT;
+                    hints.wall = Blocks.YELLOW_TERRACOTTA;
+                    hints.trim = Blocks.SMOOTH_QUARTZ;
+                    hints.arcade = true;
+                    hints.pitched = Boolean.FALSE;
+                    hints.roomType = "shop";
+                }
+                case "bsmu_anatomy" -> {
+                    // a wing of the 1847 gymnasium: yellow classicism
+                    hints.roomType = "anatomy";
+                    hints.era = ru.ufamod.building.Style.Era.MERCHANT;
+                    hints.wall = Blocks.YELLOW_TERRACOTTA;
+                    hints.trim = Blocks.SMOOTH_QUARTZ;
+                }
                 case "bsmu_canteen" -> hints.roomType = "canteen";
-                case "library" -> hints.roomType = "library";
+                case "library" -> {
+                    hints.roomType = "library";
+                    hints.era = ru.ufamod.building.Style.Era.STALIN;
+                    hints.wall = Blocks.SMOOTH_QUARTZ;
+                    hints.trim = Blocks.POLISHED_ANDESITE;
+                    hints.portico = true;
+                }
                 default -> { }
             }
         }

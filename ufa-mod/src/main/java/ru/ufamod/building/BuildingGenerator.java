@@ -37,6 +37,12 @@ public final class BuildingGenerator {
         public String roomType;
         public boolean coreOpen;
         public int roomWidth;
+        /** Looks: forced era and materials, a columned portico at the main entrance, a dome, open ground-floor arcades. */
+        public Style.Era era;
+        public Block wall, trim, roofBlock;
+        public int levels;
+        public boolean portico, dome, arcade;
+        public Boolean pitched;
     }
 
     /** A way in: the door cell, the direction pointing out of the building and the first free cell behind the door. */
@@ -73,7 +79,16 @@ public final class BuildingGenerator {
         this.fp = fp;
         this.hints = hints == null ? new Hints() : hints;
         this.rnd = new Random(b.hash());
-        this.st = Style.of(b, rnd);
+        this.st = Style.of(b, rnd, this.hints.era, this.hints.levels);
+        if (this.hints.wall != null) {
+            st.wall = this.hints.wall;
+            st.logWalls = false;
+        }
+        if (this.hints.trim != null) st.trim = this.hints.trim;
+        if (this.hints.pitched != null) {
+            st.pitched = this.hints.pitched;
+            st.flat = !this.hints.pitched;
+        }
         this.w = fp.w;
         this.d = fp.d;
         this.base = b.baseY;
@@ -83,6 +98,7 @@ public final class BuildingGenerator {
         this.top = floorY[levels];
         int extra = st.pitched ? 9 : 4;
         if (st.era == Style.Era.RELIGIOUS) extra = 34;
+        if (this.hints.dome || this.hints.portico) extra = Math.max(extra, 22);
         this.m = new Model(fp.ox, base - 1, fp.oz, w, top - base + 2 + extra, d);
         this.dist = new int[w * d];
         this.lm = new int[w * d];
@@ -676,6 +692,11 @@ public final class BuildingGenerator {
                     boolean shop = s == 0 && shopFront && facesStreet(lx, lz, n);
                     int y1 = shop ? F + 1 : F + 2, y2 = h >= 4 ? F + h - 1 : F + 2;
                     if (shop && h >= 4) y2 = F + 3;
+                    if (s == 0 && hints.arcade) {
+                        // an open trading arcade: arches instead of windows
+                        for (int y = F + 1; y <= Math.min(F + 3, F + h - 1); y++) set(lx, y, lz, Blocks.AIR);
+                        continue;
+                    }
                     for (int y = y1; y <= y2; y++) set(lx, y, lz, glass);
                     if (st.era == Style.Era.WOOD) {
                         // carved window surrounds
@@ -1248,7 +1269,97 @@ public final class BuildingGenerator {
 
     // ------------------------------------------------------------------ balconies, domes, minarets
 
+    /** Columns with an entablature and a pediment in front of the main entrance. */
+    private void portico() {
+        if (entrances.isEmpty()) return;
+        Entrance e = entrances.get(0);
+        boolean grand = hints.portico || (st.era == Style.Era.STALIN && levels >= 3 && fp.insideCount > 900
+                && (st.use == Style.Use.UNIVERSITY || st.use == Style.Use.OFFICE || st.use == Style.Use.THEATRE || st.use == Style.Use.LIBRARY || st.use == Style.Use.MUSEUM || st.use == Style.Use.SCHOOL));
+        if (!grand) return;
+        Direction out = e.out(), side = out.getClockWise();
+        int lx = e.x() - fp.ox, lz = e.z() - fp.oz;
+        int half = 6;
+        // everything has to stand on free ground in front of this very facade
+        for (int k = -half; k <= half; k++) {
+            int fx = lx + side.getStepX() * k, fz = lz + side.getStepZ() * k;
+            if (!fp.wall(fx, fz) || fp.normalAt(fx, fz) != out) {
+                half = Math.min(half, Math.abs(k) - 1);
+            }
+            for (int f = 1; f <= 3; f++) {
+                int cx = fx + out.getStepX() * f, cz = fz + out.getStepZ() * f;
+                if (!valid(cx, cz) || city.building(fp.ox + cx, fp.oz + cz) != 0) half = Math.min(half, Math.abs(k) - 1);
+            }
+        }
+        if (half < 3) return;
+        int colTop = Math.min(top - 1, base + Math.max(8, top - base - 2));
+        Block col = Blocks.QUARTZ_PILLAR, white = Blocks.SMOOTH_QUARTZ;
+        for (int k = -half; k <= half; k++) {
+            int fx = lx + side.getStepX() * k, fz = lz + side.getStepZ() * k;
+            for (int f = 1; f <= 3; f++) {
+                int cx = fx + out.getStepX() * f, cz = fz + out.getStepZ() * f;
+                // platform, steps down on the outer edge
+                for (int y = city.height(fp.ox + cx, fp.oz + cz) + 1; y < base; y++) set(cx, y, cz, Blocks.STONE_BRICKS);
+                set(cx, base, cz, f == 3 ? stair(Blocks.POLISHED_ANDESITE_STAIRS, out.getOpposite()) : st(Blocks.POLISHED_ANDESITE));
+                for (int y = base + 1; y < colTop; y++) set(cx, y, cz, Blocks.AIR);
+                // entablature
+                if (f <= 2) {
+                    set(cx, colTop, cz, white);
+                    set(cx, colTop + 1, cz, white);
+                }
+            }
+            // columns in pairs around the door
+            if (Math.abs(k) % 2 == 1 || Math.abs(k) == half) {
+                int cx = fx + out.getStepX() * 2, cz = fz + out.getStepZ() * 2;
+                for (int y = base + 1; y < colTop; y++) set(cx, y, cz, col);
+                set(cx, base + 1, cz, Blocks.CHISELED_QUARTZ_BLOCK);
+                set(cx, colTop - 1, cz, Blocks.CHISELED_QUARTZ_BLOCK);
+            }
+            // the wall behind the columns is white
+            for (int y = base + 2; y < colTop; y++) {
+                BlockState cur = m.get(fp.ox + fx, y, fp.oz + fz);
+                if (cur != null && cur.is(st.wall)) set(fx, y, fz, white);
+            }
+        }
+        // pediment
+        for (int i = 0; i <= half; i++) {
+            int y = colTop + 2 + i / 2;
+            for (int k = -(half - i); k <= half - i; k++)
+                for (int f = 0; f <= 2; f++) {
+                    int cx = lx + side.getStepX() * k + out.getStepX() * f, cz = lz + side.getStepZ() * k + out.getStepZ() * f;
+                    if (f == 0 && y <= top + 1) continue;
+                    set(cx, y, cz, i % 2 == 0 && Math.abs(k) == half - i ? st(Blocks.SMOOTH_QUARTZ_SLAB) : st(white));
+                }
+        }
+        set(lx + out.getStepX() * 2, colTop + 3, lz + out.getStepZ() * 2, Blocks.GOLD_BLOCK);
+    }
+
+    /** A dome on a drum over the deep middle of the building nearest to the main entrance. */
+    private void dome() {
+        if (!hints.dome) return;
+        int ex = entrances.isEmpty() ? w / 2 : entrances.get(0).x() - fp.ox, ez = entrances.isEmpty() ? d / 2 : entrances.get(0).z() - fp.oz;
+        int bx = -1, bz = -1, best = Integer.MAX_VALUE;
+        for (int lz = 0; lz < d; lz++)
+            for (int lx = 0; lx < w; lx++)
+                if (dist[idx(lx, lz)] >= 8) {
+                    int dd = Math.abs(lx - ex) + Math.abs(lz - ez);
+                    if (dd < best) {
+                        best = dd;
+                        bx = lx;
+                        bz = lz;
+                    }
+                }
+        if (bx < 0) return;
+        int r = 6, y0 = top + 1;
+        for (int y = y0; y < y0 + 3; y++) disc(bx, y, bz, r, st.wall, true);
+        disc(bx, y0 + 3, bz, r, Blocks.SMOOTH_QUARTZ, true);
+        int[] profile = {6, 6, 5, 5, 4, 3, 2};
+        for (int k = 0; k < profile.length; k++) disc(bx, y0 + 4 + k, bz, profile[k], Blocks.WAXED_OXIDIZED_COPPER, false);
+        for (int y = y0 + 4 + profile.length; y < y0 + 4 + profile.length + 5; y++) set(bx, y, bz, Blocks.LIGHTNING_ROD);
+    }
+
     private void extras() {
+        portico();
+        dome();
         if ((st.balconies || st.loggias) && levels >= 2) {
             for (Footprint.Run run : fp.runs) {
                 if (run.length() < 6) continue;

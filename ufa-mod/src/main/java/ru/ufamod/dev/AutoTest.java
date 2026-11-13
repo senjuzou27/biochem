@@ -73,6 +73,16 @@ public final class AutoTest {
         });
     }
 
+    /** Teleports into the air and keeps the (creative) player hovering there. */
+    private void fly(double x, double y, double z, float yaw, float pitch) {
+        step(20, "fly " + (int) x + " " + (int) y + " " + (int) z, () -> {
+            ServerLevel level = UfaWorld.level(player.server);
+            player.teleportTo(level, x, y, z, yaw, pitch);
+            player.getAbilities().flying = true;
+            player.onUpdateAbilities();
+        });
+    }
+
     private void tp(BlockPos p, float yaw, float pitch) {
         tp(p.getX() + 0.5, p.getY(), p.getZ() + 0.5, yaw, pitch);
     }
@@ -159,10 +169,8 @@ public final class AutoTest {
         expect(Stage.LECTURE_RUNNING);
         step(520, "listen to the lecture", () -> { });
         expect(Stage.TO_EXAM);
-        view(P.libraryHall, P.library, 5);
+        view(P.bsmuView.offset(60, 0, 0), P.library, -15);
         shot("07_national_library");
-        view(P.canteenHall, P.canteen, 5);
-        shot("08_canteen");
         view(P.examOut.offset(0, 0, 0), P.exam, -15);
         shot("09_anatomy_department");
         view(P.examHall, P.exam, 5);
@@ -245,12 +253,13 @@ public final class AutoTest {
         view(P.friendship.offset(0, 0, -8), P.friendship.offset(0, 14, 11), -30);
         shot("16_friendship_monument");
         BlockPos gostiny = street(P.gostiny.getX(), P.gostiny.getZ());
-        tp(gostiny.getX() + 0.5, gostiny.getY() + 14, gostiny.getZ() + 0.5, 90, 15);
+        fly(gostiny.getX() + 0.5, gostiny.getY() + 14, gostiny.getZ() + 0.5, 90, 15);
         shot("17_gostiny_dvor");
         tp(gostiny, -90, -5);
         shot("18_lenina_near_gostiny");
         BlockPos operaView = street(P.opera.getX() + 70, P.opera.getZ() - 40);
-        view(operaView.above(10), P.opera.offset(0, 0, -40), 10);
+        float operaYaw = (float) (Mth.atan2(P.opera.getZ() - 40 - operaView.getZ(), P.opera.getX() - operaView.getX()) * 180.0 / Math.PI) - 90f;
+        fly(operaView.getX() + 0.5, operaView.getY() + 12, operaView.getZ() + 0.5, operaYaw, 8);
         shot("19_opera_theatre");
         tp(street(P.park.getX(), P.park.getZ() + 40), 180, 0);
         shot("20_lenin_park");
@@ -267,12 +276,14 @@ public final class AutoTest {
         tp(street(700, 300), 135, -10);
         shot("26_wooden_houses");
         // high views
-        tp(P.bsmuDoor.getX() + 0.5, P.bsmuDoor.getY() + 70, P.bsmuDoor.getZ() + 0.5, 150, 40);
-        shot("27_centre_from_above");
-        tp(P.gostiny.getX() + 0.5, P.gostiny.getY() + 90, P.gostiny.getZ() + 0.5, -30, 45);
-        shot("28_gostiny_from_above");
-        tp(P.salavat.getX() + 0.5, P.salavat.getY() + 60, P.salavat.getZ() - 60.5, 0, 35);
+        fly(P.bsmuView.getX() + 30.5, P.bsmuDoor.getY() + 45, P.bsmuView.getZ() + 0.5, 90, 35);
+        shot("27_bsmu_from_above");
+        fly(P.gostiny.getX() + 0.5, P.gostiny.getY() + 80, P.gostiny.getZ() + 60.5, 180, 50);
+        shot("28_centre_from_above");
+        fly(P.salavat.getX() + 0.5, P.salavat.getY() + 50, P.salavat.getZ() - 70.5, 0, 30);
         shot("29_river_bank_from_above");
+        fly(P.dormView.getX() + 0.5, P.dormView.getY() + 60, P.dormView.getZ() + 40.5, 180, 40);
+        shot("30_dorm_district_from_above");
         step(100, "done", () -> {
             UfaMod.LOGGER.info("AUTOTEST FINISHED with {} failure(s)", failures);
             finished = true;
