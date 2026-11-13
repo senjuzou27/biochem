@@ -282,6 +282,8 @@ public final class AutoTest {
         // high views
         fly(P.mainView.getX() + 36.5, P.mainDoor.getY() + 45, P.mainView.getZ() + 0.5, 90, 35);
         shot("27_bsmu_from_above");
+        fly(P.bsmuView.getX() + 0.5, P.bsmuDoor.getY() + 38, P.bsmuView.getZ() - 14.5, 0, 38);
+        shot("27_building_7_from_above");
         fly(P.gostiny.getX() + 0.5, P.gostiny.getY() + 80, P.gostiny.getZ() + 60.5, 180, 50);
         shot("28_centre_from_above");
         fly(P.salavat.getX() + 0.5, P.salavat.getY() + 50, P.salavat.getZ() - 70.5, 0, 30);
