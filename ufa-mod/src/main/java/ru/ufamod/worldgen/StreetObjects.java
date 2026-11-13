@@ -287,10 +287,9 @@ public final class StreetObjects {
         Direction d = dirOf(p.dx(), p.dz());
         int x = p.x(), z = p.z();
         sink.column(x, z, y, y + 2, st(Blocks.POLISHED_DEEPSLATE_WALL));
-        sink.set(x, y + 3, z, st(Blocks.VERDANT_FROGLIGHT));
-        sink.set(x, y + 4, z, st(Blocks.OCHRE_FROGLIGHT));
-        sink.set(x, y + 5, z, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(net.minecraft.world.level.block.RedstoneLampBlock.LIT, true));
-        sink.set(x, y + 6, z, slabTop(Blocks.POLISHED_DEEPSLATE_SLAB));
+        // the head is switched by TrafficManager; it sits at ground + 4
+        sink.set(x, y + 3, z, ru.ufamod.registry.ModBlocks.TRAFFIC_LIGHT.get().defaultBlockState());
+        sink.set(x, y + 4, z, slabTop(Blocks.POLISHED_DEEPSLATE_SLAB));
         // pedestrian button box on the pole
         sink.set(x - d.getStepX(), y + 1, z - d.getStepZ(), Blocks.STONE_BUTTON.defaultBlockState()
                 .setValue(net.minecraft.world.level.block.ButtonBlock.FACE, net.minecraft.world.level.block.state.properties.AttachFace.WALL)

@@ -20,6 +20,10 @@ public final class ModEntities {
     public static final RegistryObject<EntityType<NpcEntity>> NPC = ENTITIES.register("npc",
             () -> EntityType.Builder.<NpcEntity>of(NpcEntity::new, MobCategory.MISC).sized(0.6F, 1.8F).clientTrackingRange(10).build("npc"));
 
+    public static final RegistryObject<EntityType<ru.ufamod.entity.VehicleEntity>> VEHICLE = ENTITIES.register("vehicle",
+            () -> EntityType.Builder.<ru.ufamod.entity.VehicleEntity>of(ru.ufamod.entity.VehicleEntity::new, MobCategory.MISC).sized(1.8F, 1.5F)
+                    .clientTrackingRange(10).updateInterval(2).noSave().build("vehicle"));
+
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {
         event.put(NPC.get(), NpcEntity.createAttributes().build());

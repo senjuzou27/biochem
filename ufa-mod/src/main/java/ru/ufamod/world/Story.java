@@ -254,7 +254,7 @@ public final class Story {
         npc(m, g.spotNear(hall, 0), yawOf(e.out()), NpcRole.WATCHMAN, "Вахтёр тётя Фая", 1);
         BlockPos bus = outside(city, e, 6, 3);
         MARKS.put("bus_from", bus);
-        npc(m, bus, yawOf(e.out().getOpposite()), NpcRole.DRIVER, "Водитель маршрутки", 2);
+        npc(m, bus, yawOf(e.out().getOpposite()), NpcRole.DRIVER, "Водитель автобуса", 2);
     }
 
     // ------------------------------------------------------------------ BSMU, building 1 (ul. Lenina, 3)
@@ -364,7 +364,7 @@ public final class Story {
         npc(m, g.spotNear(hall, 6), 90f, NpcRole.STUDENT, "Студентка Алина", 0);
         BlockPos stop = outside(city, e, 9, 4);
         MARKS.put("bus_to", stop);
-        npc(m, stop, yawOf(e.out().getOpposite()), NpcRole.DRIVER, "Водитель маршрутки", 3);
+        npc(m, stop, yawOf(e.out().getOpposite()), NpcRole.DRIVER, "Водитель автобуса", 3);
 
         // a classroom of the department on the second floor, in the wing to the left of the entrance
         Direction left = e.out().getClockWise();   // on the left hand of someone facing the facade

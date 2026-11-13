@@ -125,7 +125,7 @@ public final class QuestManager {
             case WAKE -> new Objective("07:00 · Возьми из шкафа (сундук в комнате) халат и зачётку", P.wardrobe);
             case BREAKFAST -> new Objective("07:15 · Позавтракай: еда в холодильнике — втором сундуке у двери", P.fridge);
             case TO_BSMU -> dist(player, P.bsmuDoor) > 500
-                    ? new Objective("07:40 · На пары: сядь в маршрутку у входа в общежитие", P.busFrom)
+                    ? new Objective("07:40 · На пары: сядь в автобус у входа в общежитие (поговори с водителем)", P.busFrom)
                     : new Objective("08:10 · Корпус №7 БГМУ: ул. Пушкина, 96/98 (остановка «Дом актёра»)", P.bsmuDoor);
             case WATCHMAN -> new Objective("08:20 · Надень халат и покажись охраннику на вахте", P.guard);
             case LECTURE -> new Objective("08:30 · Биохимия: кафедра на 2 этаже, левое крыло (от входа по лестнице)", P.lecture);
@@ -133,7 +133,7 @@ public final class QuestManager {
             case TO_EXAM -> new Objective("11:00 · Экзамен: кафедра анатомии, корпус №4 (Заки Валиди, 47). Атлас — в Нацбиблиотеке на Ленина, 4", P.exam);
             case EXAM_RUNNING -> new Objective("11:00 · Отвечай на билет", null);
             case PASSED -> dist(player, P.salavat) > 500
-                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: маршрутка у корпуса №7 на Пушкина", P.busTo)
+                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: автобус у корпуса №7 на Пушкина", P.busTo)
                     : new Objective("Сдал! Отпразднуй у памятника Салавату Юлаеву", P.salavat);
             case FAILED -> new Objective("Неуд… Выйди на улицу", P.examOut);
             case ARREST -> new Objective("…", null);
@@ -275,7 +275,7 @@ public final class QuestManager {
         if (stage(player) == Stage.BREAKFAST && event.getItem().isEdible()) {
             setStage(player, Stage.TO_BSMU);
             narrate(player, "Теперь на пары. Биохимия — в корпусе №7 на Пушкина, 96/98; до него почти два километра через центр.");
-            narrate(player, "У входа в общежитие стоит маршрутка — поговори с водителем. Или иди пешком, если не боишься опоздать.");
+            narrate(player, "У входа в общежитие ждёт автобус — поговори с водителем. Или иди пешком, если не боишься опоздать.");
         }
     }
 
@@ -476,7 +476,7 @@ public final class QuestManager {
         if (atDorm) {
             dest = P.bsmuDoor;
             say(player, name, "До Медуниверситета? Садись. Передаём за проезд!");
-            narrate(player, "Маршрутка летит по Мингажева и сворачивает на Пушкина. Десять минут — остановка «Дом актёра», прямо у корпуса №7.");
+            narrate(player, "Автобус идёт от Мингажева через центр до остановки «Дом актёра» — она прямо у корпуса №7.");
         } else if (stage == Stage.PASSED) {
             dest = P.salavat;
             say(player, name, "К Салавату? Сдал, значит! Поехали, довезу до самой площадки.");
@@ -485,9 +485,14 @@ public final class QuestManager {
             dest = P.dormOut;
             say(player, name, "До общежития на Мингажева? Поехали.");
         }
-        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
-        teleport(player, dest);
         player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 0.7f, 1.2f);
+        if (ru.ufamod.traffic.TrafficManager.ride(player, dest)) {
+            narrate(player, "Автобус едет по улицам города. Выйти раньше — клавиша приседания (Shift).");
+        } else {
+            // no way by road: the old instant ride
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
+            teleport(player, dest);
+        }
     }
 
     // ------------------------------------------------------------------ lecture

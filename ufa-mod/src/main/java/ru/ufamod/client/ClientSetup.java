@@ -14,5 +14,6 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.NPC.get(), NpcRenderer::new);
+        event.registerEntityRenderer(ModEntities.VEHICLE.get(), VehicleRenderer::new);
     }
 }

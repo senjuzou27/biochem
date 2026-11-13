@@ -56,6 +56,10 @@ public final class AutoTest {
         step(200, "screenshot " + name, () -> pendingShot = name);
     }
 
+    private void finishRide() {
+        if (player != null && player.getVehicle() instanceof ru.ufamod.entity.VehicleEntity v) v.finishRide();
+    }
+
     private void expect(Stage stage) {
         step(5, "expect " + stage, () -> {
             Stage actual = QuestManager.stage(player);
@@ -149,7 +153,13 @@ public final class AutoTest {
         shot("03_dormitory");
         tp(P.dormOut, 0, 0);
         talk(NpcRole.DRIVER);
-        step(60, "ride", () -> { });
+        step(140, "ride", () -> { });
+        shot("03_in_the_bus");
+        step(10, "look out of the window", () -> player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot() + 90f, 5f));
+        step(120, "ride on", () -> { });
+        shot("03_bus_window");
+        step(10, "get there", this::finishRide);
+        step(40, "arrive", () -> { });
         expect(Stage.WATCHMAN);
         view(P.bsmuView, P.guard, -18);
         shot("04_bsmu_building_7");
@@ -244,6 +254,8 @@ public final class AutoTest {
         tp(P.bsmuDoor, 0, 0);
         talk(NpcRole.DRIVER);
         step(60, "ride", () -> { });
+        step(10, "get there", this::finishRide);
+        step(40, "arrive", () -> { });
         expect(Stage.FREE);
         step(10, "walk freely", () -> {
             QuestManager.free(player);

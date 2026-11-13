@@ -412,7 +412,7 @@ class City:
         meta = {
             "version": 1, "tile": TILE, "x0": self.x0, "z0": self.z0, "w": W, "h": H, "waterY": WATER_Y,
             "defaultY": int(np.median(Hh)), "angle": math.degrees(ANGLE),
-            "buildings": brecs, "points": points, "places": places,
+            "buildings": brecs, "points": points, "places": places, "graph": self.graph(G),
             "attribution": "Map data (c) OpenStreetMap contributors, ODbL. Elevation: Mapzen/AWS terrain tiles.",
         }
         with gzip.open(os.path.join(out_dir, "city.json.gz"), "wt", encoding="utf-8") as fh:
@@ -717,6 +717,50 @@ class City:
         self.traffic(G, B, Hh, free, add)
         return pts
 
+    def graph(self, G):
+        """The street network for the bus and the moving cars: nodes [x, z, signal] and edges [a, b, width*10, oneway]."""
+        H, W = G.shape
+        index, nodes, edges = {}, [], []
+        signals = [self.xy[n] for n, (la, lo, t) in self.nodes.items() if t.get("highway") == "traffic_signals" and n in self.xy]
+        degree = {}
+        for r in self.road_info:
+            if r["hw"] == "service":
+                continue
+            for n in r["nds"]:
+                degree[n] = degree.get(n, 0) + (1 if n in (r["nds"][0], r["nds"][-1]) else 2)
+
+        def node(n):
+            if n in index:
+                return index[n]
+            x, z = self.xy[n]
+            ix, iz = int(x - self.x0), int(z - self.z0)
+            if not (8 <= ix < W - 8 and 8 <= iz < H - 8) or G[iz, ix] not in (ROAD, BRIDGE):
+                return -1
+            sig = 0
+            if degree.get(n, 0) >= 3:
+                for (sx, sz) in signals:
+                    if (sx - x) ** 2 + (sz - z) ** 2 < 24 * 24:
+                        sig = 1
+                        break
+            index[n] = len(nodes)
+            nodes.append([int(round(x)), int(round(z)), sig])
+            return index[n]
+
+        for r in self.road_info:
+            if r["hw"] == "service":
+                continue
+            prev = -1
+            for n in r["nds"]:
+                if n not in self.xy:
+                    prev = -1
+                    continue
+                cur = node(n)
+                if prev >= 0 and cur >= 0 and prev != cur:
+                    edges.append([prev, cur, int(round(r["w"] * 10)), 1 if r["oneway"] else 0])
+                prev = cur
+        print("graph nodes", len(nodes), "edges", len(edges), "signal junctions", sum(q[2] for q in nodes))
+        return {"n": [v for q in nodes for v in q], "e": [v for q in edges for v in q]}
+
     def traffic(self, G, B, Hh, free, add):
         """Parked cars along the kerbs and on car parks, and signs at pedestrian crossings (as on street panoramas)."""
         H, W = G.shape
@@ -785,7 +829,7 @@ class City:
                     if not near_junction(cx, cz, w / 2 + 11):
                         for side in (-1, 1):
                             if rnd.random() < chance:
-                                if park(cx + nx * side * (w / 2 - 1.2), cz + nz * side * (w / 2 - 1.2), abs(ux) > abs(uz), (ROAD,)):
+                                if park(cx + nx * side * (w / 2 - 1.0), cz + nz * side * (w / 2 - 1.0), abs(ux) > abs(uz), (ROAD,)):
                                     n_kerb += 1
                     t += 5.5 + rnd.random() * 1.5
         # car parks: scattered, about half full
