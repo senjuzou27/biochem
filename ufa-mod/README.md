@@ -24,6 +24,15 @@
 - Говорящие NPC, экзамен из 5 случайных вопросов (всего 20), два финала.
 - Предметы: белый халат, зачётка, повестка, эчпочмак, чак-чак, кумыс, камуфляж, сапёрная лопатка.
 
+## Скриншоты
+
+| | |
+| --- | --- |
+| ![Главный корпус БГМУ](docs/screenshots/bsmu_main.png) | ![Главный корпус сверху](docs/screenshots/bsmu_from_above.png) |
+| ![Улица Ленина](docs/screenshots/lenina_street.png) | ![Центр сверху](docs/screenshots/centre_from_above.png) |
+| ![Общежитие](docs/screenshots/dormitory.png) | ![Комната в общежитии](docs/screenshots/dorm_room.png) |
+| ![Лекция](docs/screenshots/lecture_hall.png) | ![Памятник Салавату Юлаеву](docs/screenshots/salavat.png) |
+
 ## Как играть
 
 1. Установи [Forge для 1.20.1](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html)
