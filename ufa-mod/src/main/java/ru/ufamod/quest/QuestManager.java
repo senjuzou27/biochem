@@ -474,7 +474,7 @@ public final class QuestManager {
         boolean atDorm = npc.distanceToSqr(P.busFrom.getX() + 0.5, npc.getY(), P.busFrom.getZ() + 0.5) < 40 * 40;
         BlockPos dest;
         if (atDorm) {
-            dest = P.busTo;
+            dest = P.bsmuDoor;
             say(player, name, "До Медуниверситета? Садись. Передаём за проезд!");
             narrate(player, "Маршрутка летит по Мингажева и Коммунистической, сворачивает на Ленина. Десять минут — и ты у главного корпуса.");
         } else if (stage == Stage.PASSED) {
@@ -482,7 +482,7 @@ public final class QuestManager {
             say(player, name, "К Салавату? Сдал, значит! Поехали, довезу до самой площадки.");
             narrate(player, "По Заки Валиди, мимо Телецентра — к обрыву над Белой.");
         } else {
-            dest = P.busFrom;
+            dest = P.dormOut;
             say(player, name, "До общежития на Мингажева? Поехали.");
         }
         player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));

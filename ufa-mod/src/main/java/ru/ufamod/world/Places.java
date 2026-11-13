@@ -22,6 +22,8 @@ public final class Places {
 
     public final BlockPos wake, bed, wardrobe, fridge, dormOut, busFrom, busTo, bsmuDoor, guard, lecture, exam, examOut, library, canteen,
             salavat, friendship, gostiny, opera, park, artKvadrat;
+    /** Camera positions for the developer self-test. */
+    public final BlockPos dormView, dormLobby, bsmuView, bsmuHall, examHall, canteenHall, libraryHall;
     public final int dormIndex, bsmuIndex, anatomyIndex;
     private final CityData city;
 
@@ -48,6 +50,13 @@ public final class Places {
         examOut = mark("exam_out", "bsmu_anatomy");
         library = mark("library", "library");
         canteen = mark("canteen", "bsmu_canteen");
+        dormView = mark("dorm_view", "dorm");
+        dormLobby = mark("dorm_lobby", "dorm");
+        bsmuView = mark("bsmu_view", "bsmu_main");
+        bsmuHall = mark("bsmu_hall", "bsmu_main");
+        examHall = mark("exam_hall", "bsmu_anatomy");
+        canteenHall = mark("canteen_hall", "bsmu_canteen");
+        libraryHall = mark("library_hall", "library");
         salavat = spot("salavat", 0, -12);
         friendship = spot("friendship", 0, -11);
         gostiny = spot("gostiny_sq", 0, 0);

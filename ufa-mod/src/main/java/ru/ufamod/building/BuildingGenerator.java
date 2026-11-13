@@ -30,7 +30,7 @@ import java.util.Random;
  */
 public final class BuildingGenerator {
     // roles of the cells inside the outline
-    static final byte OUT = 0, WALL = 1, ROOM = 2, PART = 3, CORR = 4, CORE = 5, STAIR = 6, IDOOR = 7, CWALL = 8;
+    static final byte OUT = 0, WALL = 1, ROOM = 2, PART = 3, CORR = 4, CORE = 5, STAIR = 6, IDOOR = 7, CWALL = 8, SWALL = 9;
 
     /** Overrides for the buildings of the story. */
     public static final class Hints {
@@ -244,7 +244,7 @@ public final class BuildingGenerator {
                 int i = idx(lx, lz);
                 int dd = dist[i];
                 if (dd == 0) continue;
-                if (role[i] == STAIR || role[i] == CORR || role[i] == PART) continue;
+                if (role[i] == STAIR || role[i] == CORR || role[i] == PART || role[i] == SWALL) continue;
                 if (dd == 1) {
                     role[i] = WALL;
                     continue;
@@ -273,7 +273,7 @@ public final class BuildingGenerator {
             Direction in = e.out().getOpposite();
             int lx = e.lobby().getX() - fp.ox, lz = e.lobby().getZ() - fp.oz;
             BlockPos hall = e.lobby();
-            for (int k = 1; k <= 12; k++) {
+            for (int k = 0; k <= 12; k++) {
                 int cx = lx + in.getStepX() * k, cz = lz + in.getStepZ() * k;
                 byte r = roleAt(cx, cz);
                 if (r == OUT || r == WALL) break;
@@ -284,12 +284,85 @@ public final class BuildingGenerator {
             }
             halls.add(hall);
         }
+        connectRooms();
         for (int lz = 0; lz < d; lz++)
             for (int lx = 0; lx < w; lx++) {
                 byte r = role[idx(lx, lz)];
                 if (r == CORR) corridor.add(new BlockPos(fp.ox + lx, 0, fp.oz + lz));
                 else if (r == CORE) core.add(new BlockPos(fp.ox + lx, 0, fp.oz + lz));
             }
+    }
+
+    private boolean walkable(byte r) {
+        return r == ROOM || r == CORR || r == CORE || r == IDOOR || r == STAIR;
+    }
+
+    /**
+     * Makes sure every room can be reached: finds the groups of cells that are cut off from the entrance
+     * and opens a door in a partition between such a group and the part already connected.
+     */
+    private void connectRooms() {
+        int[] comp = new int[w * d];
+        int count = 0;
+        java.util.ArrayDeque<int[]> queue = new java.util.ArrayDeque<>();
+        for (int lz = 0; lz < d; lz++)
+            for (int lx = 0; lx < w; lx++) {
+                if (comp[idx(lx, lz)] != 0 || !walkable(role[idx(lx, lz)])) continue;
+                comp[idx(lx, lz)] = ++count;
+                queue.add(new int[]{lx, lz});
+                while (!queue.isEmpty()) {
+                    int[] c = queue.poll();
+                    for (Direction dir : Direction.Plane.HORIZONTAL) {
+                        int nx = c[0] + dir.getStepX(), nz = c[1] + dir.getStepZ();
+                        if (!valid(nx, nz) || comp[idx(nx, nz)] != 0 || !walkable(role[idx(nx, nz)])) continue;
+                        comp[idx(nx, nz)] = count;
+                        queue.add(new int[]{nx, nz});
+                    }
+                }
+            }
+        if (count <= 1) return;
+        int[] parent = new int[count + 1];
+        for (int i = 0; i <= count; i++) parent[i] = i;
+        // start from the entrance if there is one, otherwise from the largest group
+        int main = 0;
+        if (!entrances.isEmpty()) {
+            BlockPos l = entrances.get(0).lobby();
+            if (valid(l.getX() - fp.ox, l.getZ() - fp.oz)) main = comp[idx(l.getX() - fp.ox, l.getZ() - fp.oz)];
+        }
+        if (main == 0) {
+            int[] size = new int[count + 1];
+            for (int c : comp) size[c]++;
+            for (int i = 1; i <= count; i++) if (size[i] > size[main] || main == 0) main = i;
+        }
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (int lz = 1; lz < d - 1; lz++)
+                for (int lx = 1; lx < w - 1; lx++) {
+                    byte r = role[idx(lx, lz)];
+                    if (r != PART && r != CWALL) continue;
+                    for (int axis = 0; axis < 2; axis++) {
+                        int a = comp[axis == 0 ? idx(lx - 1, lz) : idx(lx, lz - 1)], b2 = comp[axis == 0 ? idx(lx + 1, lz) : idx(lx, lz + 1)];
+                        if (a == 0 || b2 == 0) continue;
+                        int ra = find(parent, a), rb = find(parent, b2), rm = find(parent, main);
+                        if (ra == rb || (ra != rm && rb != rm)) continue;
+                        // not next to another door: two doors side by side look wrong
+                        boolean nearDoor = false;
+                        for (Direction dir : Direction.Plane.HORIZONTAL) if (roleAt(lx + dir.getStepX(), lz + dir.getStepZ()) == IDOOR) nearDoor = true;
+                        if (nearDoor) continue;
+                        role[idx(lx, lz)] = IDOOR;
+                        comp[idx(lx, lz)] = main;
+                        parent[ra == rm ? rb : ra] = rm;
+                        changed = true;
+                        break;
+                    }
+                }
+        }
+    }
+
+    private static int find(int[] parent, int i) {
+        while (parent[i] != i) i = parent[i] = parent[parent[i]];
+        return i;
     }
 
     // ------------------------------------------------------------------ entrances and staircases
@@ -361,6 +434,30 @@ public final class BuildingGenerator {
         return p;
     }
 
+    /** Developer aid: the role map and the blocks at two heights of a storey as text. */
+    public String debugMap(int storey) {
+        StringBuilder sb = new StringBuilder();
+        String chars = " #.|cOSDWX";
+        int F = floorY[storey];
+        for (int lz = 0; lz < d; lz++) {
+            for (int lx = 0; lx < w; lx++) sb.append(chars.charAt(role[idx(lx, lz)]));
+            sb.append("   ");
+            for (int lx = 0; lx < w; lx++) {
+                BlockState a1 = m.get(fp.ox + lx, F + 1, fp.oz + lz), a2 = m.get(fp.ox + lx, F + 2, fp.oz + lz), fl = m.get(fp.ox + lx, F, fp.oz + lz);
+                char c;
+                if (a1 == null) c = ' ';
+                else if (a1.getBlock() instanceof DoorBlock) c = 'D';
+                else if (a1.getBlock() instanceof StairBlock) c = '/';
+                else if (a1.blocksMotion()) c = a2 != null && a2.blocksMotion() ? '#' : 'o';
+                else if (fl == null || !fl.blocksMotion()) c = fl != null && fl.getBlock() instanceof StairBlock ? '\\' : '_';
+                else c = '.';
+                sb.append(c);
+            }
+            sb.append('\n');
+        }
+        return sb.toString();
+    }
+
     public boolean isCorridor(int wx, int wz) {
         byte r = roleAt(wx - fp.ox, wz - fp.oz);
         return r == CORR || r == CORE;
@@ -418,26 +515,32 @@ public final class BuildingGenerator {
             boolean hasStairs = false;
             int lobbyX = c[0] + in.getStepX(), lobbyZ = c[1] + in.getStepZ();
             if (levels > 1 && wells < maxWells) {
-                for (Direction side : new Direction[]{out.getClockWise(), out.getCounterClockWise()}) {
-                    if (tryWell(lobbyX, lobbyZ, in, side)) {
-                        hasStairs = true;
-                        wells++;
-                        // the free lane is the way in on the ground floor
-                        lobbyX += side.getStepX();
-                        lobbyZ += side.getStepZ();
-                        break;
+                // three lanes (a through passage and two flights) where there is room, otherwise two
+                outer:
+                for (int lanes = levels > 2 ? 3 : 2; lanes >= 2; lanes--)
+                    for (Direction side : new Direction[]{out.getClockWise(), out.getCounterClockWise()}) {
+                        if (tryWell(lobbyX, lobbyZ, in, side, lanes)) {
+                            hasStairs = true;
+                            wells++;
+                            if (lanes == 2) {
+                                // the lane without the first flight is the way in on the ground floor
+                                lobbyX += side.getStepX();
+                                lobbyZ += side.getStepZ();
+                            }
+                            break outer;
+                        }
                     }
-                }
             }
             entrances.add(new Entrance(fp.ox + c[0], fp.oz + c[1], out, hasStairs, new BlockPos(fp.ox + lobbyX, base + 1, fp.oz + lobbyZ)));
         }
         if (levels > 1 && wells == 0) {
             // no staircase fits behind a door: look for any free strip
             outer:
-            for (int lz = 1; lz < d - 1; lz++)
-                for (int lx = 1; lx < w - 1; lx++)
-                    for (Direction dir : Direction.Plane.HORIZONTAL)
-                        if (fp.interior(lx, lz) && tryWell(lx, lz, dir, dir.getClockWise())) break outer;
+            for (int lanes = levels > 2 ? 3 : 2; lanes >= 2; lanes--)
+                for (int lz = 1; lz < d - 1; lz++)
+                    for (int lx = 1; lx < w - 1; lx++)
+                        for (Direction dir : Direction.Plane.HORIZONTAL)
+                            if (fp.interior(lx, lz) && tryWell(lx, lz, dir, dir.getClockWise(), lanes)) break outer;
         }
     }
 
@@ -445,24 +548,29 @@ public final class BuildingGenerator {
         return Math.max(st.groundHeight, st.storeyHeight);
     }
 
-    /** Reserves a staircase: two lanes, {@code wellLength + 2} cells long, starting at (lx, lz) and running along dir. */
-    private boolean tryWell(int lx, int lz, Direction dir, Direction side) {
+    /**
+     * Reserves a staircase {@code wellLength + 2} cells long, starting at (lx, lz) and running along dir.
+     * With three lanes the first one is a level passage through the well and the other two carry the flights;
+     * with two lanes there is no passage.
+     */
+    private boolean tryWell(int lx, int lz, Direction dir, Direction side, int lanes) {
         int len = wellLength() + 2;
         for (int k = 0; k < len; k++)
-            for (int lane = 0; lane < 2; lane++) {
+            for (int lane = 0; lane < lanes; lane++) {
                 int cx = lx + dir.getStepX() * k + side.getStepX() * lane, cz = lz + dir.getStepZ() * k + side.getStepZ() * lane;
-                if (!fp.interior(cx, cz) || role[idx(cx, cz)] == STAIR) return false;
+                if (!fp.interior(cx, cz) || role[idx(cx, cz)] != 0) return false;
             }
         for (int k = 0; k < len; k++)
-            for (int lane = 0; lane < 2; lane++)
+            for (int lane = 0; lane < lanes; lane++)
                 role[idx(lx + dir.getStepX() * k + side.getStepX() * lane, lz + dir.getStepZ() * k + side.getStepZ() * lane)] = STAIR;
-        // walls along both flights
-        for (int k = 1; k < len - 1; k++)
-            for (int lane = -1; lane <= 2; lane += 3) {
-                int cx = lx + dir.getStepX() * k + side.getStepX() * lane, cz = lz + dir.getStepZ() * k + side.getStepZ() * lane;
-                if (fp.interior(cx, cz) && role[idx(cx, cz)] == 0) role[idx(cx, cz)] = PART;
-            }
-        stairWells.add(new int[]{lx, lz, dir.ordinal(), side.ordinal()});
+        // walls along the well: doors may be cut into the passage side, never into the side of the flights
+        for (int k = 0; k < len; k++) {
+            int ax = lx + dir.getStepX() * k - side.getStepX(), az = lz + dir.getStepZ() * k - side.getStepZ();
+            if (fp.interior(ax, az) && role[idx(ax, az)] == 0 && k >= 1 && k < len - 1) role[idx(ax, az)] = lanes == 3 ? PART : SWALL;
+            int bx = lx + dir.getStepX() * k + side.getStepX() * lanes, bz = lz + dir.getStepZ() * k + side.getStepZ() * lanes;
+            if (fp.interior(bx, bz) && role[idx(bx, bz)] == 0) role[idx(bx, bz)] = SWALL;
+        }
+        stairWells.add(new int[]{lx, lz, dir.ordinal(), side.ordinal(), lanes});
         return true;
     }
 
@@ -472,22 +580,25 @@ public final class BuildingGenerator {
         int len = wellLength();
         for (int[] well : stairWells) {
             Direction dir = Direction.values()[well[2]], side = Direction.values()[well[3]];
+            int lanes = well[4];
+            int laneA = lanes == 3 ? 1 : 0, laneB = laneA + 1;
             for (int s = 0; s < levels; s++) {
                 int F = floorY[s], h = storeyHeight(s);
                 // floor of this storey inside the well
                 for (int k = 0; k <= len + 1; k++)
-                    for (int lane = 0; lane < 2; lane++) {
+                    for (int lane = 0; lane < lanes; lane++) {
                         int cx = well[0] + dir.getStepX() * k + side.getStepX() * lane, cz = well[1] + dir.getStepZ() * k + side.getStepZ() * lane;
                         if (!hole[(s * w * d) + idx(cx, cz)]) set(cx, F, cz, landing);
+                        else if (s > 0 && isFloorBlock(cx, F, cz)) set(cx, F, cz, Blocks.AIR);
                         for (int y = F + 1; y < F + h; y++) set(cx, y, cz, Blocks.AIR);
                     }
-                // a lamp in the side wall
-                int lx = well[0] + dir.getStepX() * 2 - side.getStepX(), lz = well[1] + dir.getStepZ() * 2 - side.getStepZ();
-                if (roleAt(lx, lz) != OUT && roleAt(lx, lz) != WALL && roleAt(lx, lz) != STAIR) set(lx, F + 2, lz, Blocks.OCHRE_FROGLIGHT);
+                // a lamp in the wall beside the flights
+                int lx = well[0] + dir.getStepX() * 2 + side.getStepX() * lanes, lz = well[1] + dir.getStepZ() * 2 + side.getStepZ() * lanes;
+                if (roleAt(lx, lz) == SWALL) set(lx, F + 2, lz, Blocks.OCHRE_FROGLIGHT);
                 else set(well[0] + dir.getStepX() * (len + 1), F + h, well[1] + dir.getStepZ() * (len + 1), Blocks.GLOWSTONE);
                 if (s == levels - 1) break;
                 boolean even = s % 2 == 0;
-                int lane = even ? 0 : 1;
+                int lane = even ? laneA : laneB;
                 for (int j = 1; j <= h; j++) {
                     int k = even ? j : len + 1 - j;
                     int cx = well[0] + dir.getStepX() * k + side.getStepX() * lane, cz = well[1] + dir.getStepZ() * k + side.getStepZ() * lane;
@@ -497,6 +608,11 @@ public final class BuildingGenerator {
                     hole[((s + 1) * w * d) + idx(cx, cz)] = true;
                     for (int y = F + j + 1; y <= F + h + 2 && y < floorY[Math.min(levels, s + 2)]; y++) set(cx, y, cz, Blocks.AIR);
                 }
+                // and no floor above the spot where the flight is entered, or one could not get off the first step
+                int k0 = even ? 0 : len + 1;
+                int hx = well[0] + dir.getStepX() * k0 + side.getStepX() * lane, hz = well[1] + dir.getStepZ() * k0 + side.getStepZ() * lane;
+                hole[((s + 1) * w * d) + idx(hx, hz)] = true;
+                set(hx, F + h, hz, Blocks.AIR);
             }
             if (st.flat && levels >= 4) {
                 // the roof exit
@@ -509,6 +625,11 @@ public final class BuildingGenerator {
                     }
             }
         }
+    }
+
+    private boolean isFloorBlock(int lx, int y, int lz) {
+        BlockState b2 = m.get(fp.ox + lx, y, fp.oz + lz);
+        return b2 != null && !(b2.getBlock() instanceof StairBlock) && !b2.isAir();
     }
 
     // ------------------------------------------------------------------ shell: walls, windows, floors
@@ -681,15 +802,16 @@ public final class BuildingGenerator {
                     int wx = fp.ox + lx, wz = fp.oz + lz;
                     Direction n = fdir[i];
                     switch (r) {
-                        case PART, CWALL -> {
+                        case PART, CWALL, SWALL -> {
                             for (int y = F + 1; y < F + h; y++) set(lx, y, lz, st.partition);
                         }
                         case IDOOR -> {
                             for (int y = F + 3; y < F + h; y++) set(lx, y, lz, st.partition);
                             // the door swings across the wall it sits in
-                            Direction across = roleAt(lx + 1, lz) == CWALL || roleAt(lx - 1, lz) == CWALL || roleAt(lx + 1, lz) == PART || roleAt(lx - 1, lz) == PART
-                                    ? Direction.NORTH : Direction.EAST;
-                            if (dist[i] > 3 || lm[i] > 4) door(lx, F + 1, lz, across, st.interiorDoor);
+                            boolean passX = walkable(roleAt(lx - 1, lz)) && walkable(roleAt(lx + 1, lz));
+                            boolean passZ = walkable(roleAt(lx, lz - 1)) && walkable(roleAt(lx, lz + 1));
+                            // a door only where the opening is a real doorway in a wall line
+                            if (passX != passZ) door(lx, F + 1, lz, passX ? Direction.EAST : Direction.NORTH, st.interiorDoor);
                         }
                         case CORR -> {
                             if (hash(wx, wz, 5 + s) % 9 == 0 && nearWallCount(lx, lz) == 0 && h >= 3) ceilingLight(lx, lz, s);
@@ -707,26 +829,38 @@ public final class BuildingGenerator {
                 if (run.length() < P) continue;
                 Direction n = run.normal();
                 int lastIndex = Integer.MIN_VALUE;
+                int[] first = run.cells().get(0), last = run.cells().get(run.length() - 1);
                 for (int[] c : run.cells()) {
                     int coord = coordOf(n, c[0], c[1]);
                     int ri = Math.floorDiv(coord, P);
                     if (ri == lastIndex || Math.floorMod(coord, P) != 1) continue;
                     int ix = c[0] - n.getStepX(), iz = c[1] - n.getStepZ();
                     if (roleAt(ix, iz) != ROOM) continue;
-                    // the whole width of the room has to lie on this run
-                    int[] last = run.cells().get(run.length() - 1);
-                    if (coordOf(n, last[0], last[1]) < coord + P - 2) continue;
+                    // the whole room, with the partitions on both sides, has to lie on this run
+                    if (coordOf(n, first[0], first[1]) > coord - 1 || coordOf(n, last[0], last[1]) < coord + P - 1) continue;
+                    RoomRef ref = new RoomRef(s, floorY[s], n, ri, P, roomDepth(lm[idx(ix, iz)]), fp.ox + ix, fp.oz + iz);
+                    if (!regular(ref)) continue;
                     lastIndex = ri;
-                    rooms.add(new RoomRef(s, floorY[s], n, ri, P, roomDepth(lm[idx(ix, iz)]), fp.ox + ix, fp.oz + iz));
+                    rooms.add(ref);
                 }
             }
+    }
+
+    /** A room is regular when every cell of its grid rectangle really is room floor. */
+    private boolean regular(RoomRef r) {
+        for (int u = 1; u < r.width(); u++)
+            for (int v = 0; v < r.depth(); v++) {
+                BlockPos c = roomCell(r, u, v);
+                if (roleAt(c.getX() - fp.ox, c.getZ() - fp.oz) != ROOM) return false;
+            }
+        return true;
     }
 
     private int nearWallCount(int lx, int lz) {
         int c = 0;
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             byte r = roleAt(lx + dir.getStepX(), lz + dir.getStepZ());
-            if (r == CWALL || r == PART || r == WALL || r == IDOOR) c++;
+            if (r == CWALL || r == PART || r == WALL || r == IDOOR || r == SWALL) c++;
         }
         return c;
     }
@@ -751,6 +885,7 @@ public final class BuildingGenerator {
         int coord = coordOf(n, lx, lz);
         int u = Math.floorMod(coord, P), v = dist[i] - 2;
         if (u == 0) return;
+        if (keepFree(lx, lz)) return;
         int F = floorY[s], y = F + 1;
         Direction in = n.getOpposite(), up = uPos(n), un = up.getOpposite();
         String type = roomType(s, n, Math.floorDiv(coord, P));
@@ -865,6 +1000,17 @@ public final class BuildingGenerator {
         }
     }
 
+    /** Cells in front of doors, door openings, passages and staircases stay empty. */
+    private boolean keepFree(int lx, int lz) {
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            int nx = lx + dir.getStepX(), nz = lz + dir.getStepZ();
+            byte r = roleAt(nx, nz);
+            if (r == IDOOR || r == CORR || r == STAIR) return true;
+            if (r == WALL) for (int[] c : doorCells) if (c[0] == nx && c[1] == nz) return true;
+        }
+        return false;
+    }
+
     private static Block carpet(int h) {
         Block[] c = {Blocks.RED_CARPET, Blocks.BROWN_CARPET, Blocks.GREEN_CARPET, Blocks.BLUE_CARPET, Blocks.ORANGE_CARPET, Blocks.LIGHT_GRAY_CARPET};
         return c[h % c.length];
@@ -930,7 +1076,7 @@ public final class BuildingGenerator {
 
     private void bed(int lx, int y, int lz, Direction facing, Block bed) {
         int hx = lx + facing.getStepX(), hz = lz + facing.getStepZ();
-        if (roleAt(hx, hz) != ROOM || !m.isAir(fp.ox + hx, y, fp.oz + hz) || !m.isAir(fp.ox + lx, y, fp.oz + lz)) return;
+        if (roleAt(hx, hz) != ROOM || keepFree(hx, hz) || !m.isAir(fp.ox + hx, y, fp.oz + hz) || !m.isAir(fp.ox + lx, y, fp.oz + lz)) return;
         BlockState s = bed.defaultBlockState().setValue(BedBlock.FACING, facing);
         set(lx, y, lz, s.setValue(BedBlock.PART, BedPart.FOOT));
         set(hx, y, hz, s.setValue(BedBlock.PART, BedPart.HEAD));

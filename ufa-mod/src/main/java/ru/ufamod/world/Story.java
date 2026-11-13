@@ -37,6 +37,12 @@ public final class Story {
 
     @Nullable
     public static Model build(CityData city, BuildingInfo b) {
+        BuildingGenerator g = generate(city, b);
+        return g == null ? null : g.m;
+    }
+
+    @Nullable
+    public static BuildingGenerator generate(CityData city, BuildingInfo b) {
         if (b == null) return null;
         String role = roleOf(city, b);
         BuildingGenerator.Hints hints = new BuildingGenerator.Hints();
@@ -61,7 +67,7 @@ public final class Story {
                 default -> { }
             }
         }
-        return g.m;
+        return g;
     }
 
     private static BlockPos outside(CityData city, Entrance e, int forward, int sideways) {
@@ -101,38 +107,49 @@ public final class Story {
                 break;
             }
         int storey = Math.min(1, g.levels - 1);
-        RoomRef best = null;
-        int bestDist = Integer.MAX_VALUE;
-        for (RoomRef r : g.rooms) {
-            if (r.storey() != storey || r.depth() < 3) continue;
-            int dd = Math.abs(r.ax() - e.x()) + Math.abs(r.az() - e.z());
-            if (dd < bestDist) {
-                bestDist = dd;
-                best = r;
-            }
-        }
-        if (best != null) {
+        final Entrance door = e;
+        java.util.List<RoomRef> candidates = new java.util.ArrayList<>();
+        for (RoomRef r : g.rooms) if (r.storey() == storey && r.depth() >= 3) candidates.add(r);
+        candidates.sort(java.util.Comparator.comparingInt(r -> Math.abs(r.ax() - door.x()) + Math.abs(r.az() - door.z())));
+        boolean placed = false;
+        for (RoomRef best : candidates) {
             int last = best.width() - 1, mid = best.width() / 2, back = best.depth() - 1;
             Direction up = best.out().getAxis() == Direction.Axis.Z ? Direction.EAST : Direction.SOUTH;
             BlockPos wardrobe = BuildingGenerator.roomCell(best, last, back);
-            m.set(wardrobe.getX(), wardrobe.getY(), wardrobe.getZ(), Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, up.getOpposite()));
-            m.chestItems(wardrobe.getX(), wardrobe.getY(), wardrobe.getZ(), Loot.of("wardrobe"));
-            m.set(wardrobe.getX(), wardrobe.getY() + 1, wardrobe.getZ(), Blocks.AIR.defaultBlockState());
             BlockPos fridge = BuildingGenerator.roomCell(best, 1, back);
+            BlockPos wake = BuildingGenerator.roomCell(best, mid, back);
+            BlockPos mate = BuildingGenerator.roomCell(best, Math.max(2, mid - 1), 1);
+            // remember what the generator put there, in case the room turns out to be a dead end
+            BlockPos[] touched = {wardrobe, wardrobe.above(), fridge, fridge.above(), mate};
+            net.minecraft.world.level.block.state.BlockState[] before = new net.minecraft.world.level.block.state.BlockState[touched.length];
+            for (int i = 0; i < touched.length; i++) before[i] = m.get(touched[i].getX(), touched[i].getY(), touched[i].getZ());
+            m.set(wardrobe.getX(), wardrobe.getY(), wardrobe.getZ(), Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, up.getOpposite()));
+            m.set(wardrobe.getX(), wardrobe.getY() + 1, wardrobe.getZ(), Blocks.AIR.defaultBlockState());
             m.set(fridge.getX(), fridge.getY(), fridge.getZ(), Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, up));
-            m.chestItems(fridge.getX(), fridge.getY(), fridge.getZ(), Loot.of("fridge"));
             m.set(fridge.getX(), fridge.getY() + 1, fridge.getZ(), Blocks.AIR.defaultBlockState());
-            MARKS.put("wake", BuildingGenerator.roomCell(best, mid, back));
+            m.set(mate.getX(), mate.getY(), mate.getZ(), Blocks.AIR.defaultBlockState());
+            // the player has to be able to walk from the bed to the street without jumping
+            if (!ru.ufamod.building.WalkTest.canLeave(city, g, wake, false)) {
+                for (int i = 0; i < touched.length; i++) if (before[i] != null) m.set(touched[i].getX(), touched[i].getY(), touched[i].getZ(), before[i]);
+                continue;
+            }
+            m.chestItems(wardrobe.getX(), wardrobe.getY(), wardrobe.getZ(), Loot.of("wardrobe"));
+            m.chestItems(fridge.getX(), fridge.getY(), fridge.getZ(), Loot.of("fridge"));
+            MARKS.put("wake", wake);
             MARKS.put("bed", BuildingGenerator.roomCell(best, 1, 1));
             MARKS.put("wardrobe", wardrobe);
             MARKS.put("fridge", fridge);
-            BlockPos mate = BuildingGenerator.roomCell(best, Math.max(2, mid - 1), 1);
-            m.set(mate.getX(), mate.getY(), mate.getZ(), Blocks.AIR.defaultBlockState());
             npc(m, mate, yawOf(best.out().getOpposite()), NpcRole.ROOMMATE, "Сосед Азамат", 1);
-        } else {
+            placed = true;
+            break;
+        }
+        if (!placed) {
+            ru.ufamod.UfaMod.LOGGER.warn("No walkable dormitory room found; the story starts in the lobby");
             MARKS.put("wake", e.lobby());
         }
         MARKS.put("dorm_out", outside(city, e, 3, 0));
+        MARKS.put("dorm_view", outside(city, e, 26, 0));
+        MARKS.put("dorm_lobby", e.lobby());
         BlockPos hall = g.halls.get(g.entrances.indexOf(e));
         npc(m, g.spotNear(hall, 0), yawOf(e.out()), NpcRole.WATCHMAN, "Вахтёр тётя Фая", 1);
         BlockPos bus = outside(city, e, 6, 3);
@@ -147,6 +164,8 @@ public final class Story {
         Entrance e = g.entrances.get(0);
         BlockPos hall = g.halls.get(0);
         MARKS.put("bsmu_door", outside(city, e, 3, 0));
+        MARKS.put("bsmu_view", outside(city, e, 30, 0));
+        MARKS.put("bsmu_hall", hall);
         BlockPos guard = g.spotNear(hall, 0);
         MARKS.put("guard", guard);
         npc(m, guard, yawOf(e.out()), NpcRole.WATCHMAN, "Охранник Ринат", 0);
@@ -207,6 +226,7 @@ public final class Story {
         BlockPos prof = g.spotNear(hall, 1);
         MARKS.put("exam", prof);
         MARKS.put("exam_out", outside(city, e, 3, 0));
+        MARKS.put("exam_hall", hall);
         npc(m, prof, yawOf(e.out()), NpcRole.PROFESSOR, "Профессор Латыпов", 0);
         npc(m, g.spotNear(hall, 3), 0f, NpcRole.STUDENT, "Одногруппник Ильнур", 1);
         npc(m, g.spotNear(hall, 5), 180f, NpcRole.STUDENT, "Одногруппница Алина", 0);
@@ -216,6 +236,7 @@ public final class Story {
         BlockPos hall = g.halls.get(0);
         BlockPos cook = g.spotNear(hall, 0);
         MARKS.put("canteen", cook);
+        MARKS.put("canteen_hall", hall);
         npc(g.m, cook, yawOf(g.entrances.get(0).out()), NpcRole.COOK, "Повар Зульфия-апа", 0);
     }
 
@@ -224,6 +245,7 @@ public final class Story {
         BlockPos hall = g.halls.get(0);
         BlockPos lib = g.spotNear(hall, 0);
         MARKS.put("library", lib);
+        MARKS.put("library_hall", hall);
         npc(m, lib, yawOf(g.entrances.get(0).out()), NpcRole.LIBRARIAN, "Библиотекарь Роза Маратовна", 0);
         BlockPos lectern = g.spotNear(hall, 2);
         if (!lectern.equals(lib) && !lectern.equals(hall)) {
