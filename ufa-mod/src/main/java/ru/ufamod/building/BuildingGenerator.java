@@ -43,6 +43,15 @@ public final class BuildingGenerator {
         public int levels;
         public boolean portico, dome, arcade;
         public Boolean pitched;
+        /** Ground-storey wall material; with a stripe every second row is made of it (rusticated bands). */
+        public Block base, stripe;
+        /** White strips between the windows of the upper storeys, a mansard roof with dormers, no generic portico. */
+        public boolean pilasters, mansard, noPortico;
+        /** A plain facade: no balconies, loggias or coloured panels. */
+        public boolean plain;
+        public Block roofStairs, roofSlab;
+        /** Up to four lines for an information sign beside the stairs of each storey. */
+        public String[][] floorSigns;
     }
 
     /** A way in: the door cell, the direction pointing out of the building and the first free cell behind the door. */
@@ -89,6 +98,18 @@ public final class BuildingGenerator {
             st.pitched = this.hints.pitched;
             st.flat = !this.hints.pitched;
         }
+        if (this.hints.plain) {
+            st.balconies = false;
+            st.loggias = false;
+            st.accent = st.wall;
+        }
+        if (this.hints.mansard) {
+            st.pitched = true;
+            st.flat = false;
+        }
+        if (this.hints.roofBlock != null) st.roofBlock = this.hints.roofBlock;
+        if (this.hints.roofStairs != null) st.roofStairs = this.hints.roofStairs;
+        if (this.hints.roofSlab != null) st.roofSlab = this.hints.roofSlab;
         this.w = fp.w;
         this.d = fp.d;
         this.base = b.baseY;
@@ -179,7 +200,7 @@ public final class BuildingGenerator {
         return facadeNormal.getAxis() == Direction.Axis.Z ? fp.ox + lx : fp.oz + lz;
     }
 
-    private static Direction uPos(Direction facadeNormal) {
+    public static Direction uPos(Direction facadeNormal) {
         return facadeNormal.getAxis() == Direction.Axis.Z ? Direction.EAST : Direction.SOUTH;
     }
 
@@ -612,6 +633,11 @@ public final class BuildingGenerator {
                 int lx = well[0] + dir.getStepX() * 2 + side.getStepX() * lanes, lz = well[1] + dir.getStepZ() * 2 + side.getStepZ() * lanes;
                 if (roleAt(lx, lz) == SWALL) set(lx, F + 2, lz, Blocks.OCHRE_FROGLIGHT);
                 else set(well[0] + dir.getStepX() * (len + 1), F + h, well[1] + dir.getStepZ() * (len + 1), Blocks.GLOWSTONE);
+                if (lanes == 3 && hints.floorSigns != null && s < hints.floorSigns.length && hints.floorSigns[s] != null) {
+                    // an information stand at the end of the passage through the well
+                    int sx = well[0] + dir.getStepX() * (len + 1), sz = well[1] + dir.getStepZ() * (len + 1);
+                    if (m.isAir(fp.ox + sx, F + 1, fp.oz + sz)) standingSign(fp.ox + sx, F + 1, fp.oz + sz, dir.getOpposite(), hints.floorSigns[s]);
+                }
                 if (s == levels - 1) break;
                 boolean even = s % 2 == 0;
                 int lane = even ? laneA : laneB;
@@ -682,9 +708,11 @@ public final class BuildingGenerator {
                     int F = floorY[s], h = storeyHeight(s);
                     for (int y = F + 1; y <= F + h; y++) {
                         BlockState ws = wallState(y);
-                        if (corner && (st.quoins || st.era == Style.Era.STALIN)) ws = st(st.trim);
-                        else if (s == 0 && y == F + 1 && st.era != Style.Era.WOOD && st.era != Style.Era.PANEL) ws = st(st.plinth);
+                        if (corner && (st.quoins || st.era == Style.Era.STALIN) && !(s == 0 && hints.base != null && y < F + h)) ws = st(st.trim);
                         else if (y == F + h && s < levels - 1 && (st.era == Style.Era.MERCHANT || st.era == Style.Era.STALIN) && s == 0) ws = st(st.trim);
+                        else if (s == 0 && hints.base != null) ws = st(hints.stripe != null && (y - F) % 2 == 0 ? hints.stripe : hints.base);
+                        else if (s == 0 && y == F + 1 && st.era != Style.Era.WOOD && st.era != Style.Era.PANEL) ws = st(st.plinth);
+                        else if (hints.pilasters && s > 0 && !corner && Math.floorMod(coordOf(n, lx, lz), st.period) == 0) ws = st(st.trim);
                         else if (st.era == Style.Era.PANEL && y == F + 1 && !corner) ws = st(Math.floorMod(coordOf(n, lx, lz), P) >= P / 2 ? st.accent : st.wall);
                         set(lx, y, lz, ws);
                     }
@@ -754,8 +782,8 @@ public final class BuildingGenerator {
                 }
             return;
         }
-        boolean steep = st.era == Style.Era.WOOD || st.era == Style.Era.MERCHANT || st.era == Style.Era.RELIGIOUS;
-        int cap = steep ? (st.era == Style.Era.WOOD ? 4 : 5) : 8;
+        boolean steep = st.era == Style.Era.WOOD || st.era == Style.Era.MERCHANT || st.era == Style.Era.RELIGIOUS || hints.mansard;
+        int cap = hints.mansard ? 3 : steep ? (st.era == Style.Era.WOOD ? 4 : 5) : 8;
         for (int lz = 0; lz < d; lz++)
             for (int lx = 0; lx < w; lx++) {
                 int dd = dist[idx(lx, lz)];
@@ -779,6 +807,21 @@ public final class BuildingGenerator {
                     set(lx, y, lz, k % 2 == 1 ? st(st.roofSlab) : st(st.roofBlock));
                 }
             }
+        if (hints.mansard) {
+            // dormer windows in the slope, in step with the windows below
+            for (Footprint.Run run : fp.runs) {
+                if (run.length() < 6) continue;
+                Direction n = run.normal();
+                for (int[] c : run.cells()) {
+                    if (Math.floorMod(coordOf(n, c[0], c[1]), st.period * 2) != 1 || !windowHere(c[0], c[1], n)) continue;
+                    int ix = c[0] - n.getStepX(), iz = c[1] - n.getStepZ();
+                    if (distAt(ix, iz) != 2) continue;
+                    set(ix, top + 2, iz, Blocks.GLASS);
+                    set(ix, top + 3, iz, st(slabOf(st.trim)));
+                }
+            }
+            return;
+        }
         if (steep && st.use != Style.Use.CHURCH && st.use != Style.Use.MOSQUE && fp.insideCount > 30) {
             // a chimney
             for (int tries = 0; tries < 20; tries++) {
@@ -1117,6 +1160,18 @@ public final class BuildingGenerator {
         m.signText(fp.ox + lx, y, fp.oz + lz, lines);
     }
 
+    /** A sign on a post; world coordinates. Signs do not block the way. */
+    public void standingSign(int wx, int y, int wz, Direction facing, String... lines) {
+        m.set(wx, y, wz, Blocks.BIRCH_SIGN.defaultBlockState().setValue(net.minecraft.world.level.block.StandingSignBlock.ROTATION, rotationOf(facing)));
+        m.signText(wx, y, wz, lines);
+    }
+
+    /** A sign on a wall; world coordinates of the sign itself. */
+    public void wallSignAt(int wx, int y, int wz, Direction facing, String... lines) {
+        m.set(wx, y, wz, Blocks.BIRCH_WALL_SIGN.defaultBlockState().setValue(WallSignBlock.FACING, facing));
+        m.signText(wx, y, wz, lines);
+    }
+
     public static List<String> wrap(String text, int width, int maxLines) {
         List<String> out = new ArrayList<>();
         StringBuilder line = new StringBuilder();
@@ -1275,7 +1330,7 @@ public final class BuildingGenerator {
         Entrance e = entrances.get(0);
         boolean grand = hints.portico || (st.era == Style.Era.STALIN && levels >= 3 && fp.insideCount > 900
                 && (st.use == Style.Use.UNIVERSITY || st.use == Style.Use.OFFICE || st.use == Style.Use.THEATRE || st.use == Style.Use.LIBRARY || st.use == Style.Use.MUSEUM || st.use == Style.Use.SCHOOL));
-        if (!grand) return;
+        if (!grand || hints.noPortico) return;
         Direction out = e.out(), side = out.getClockWise();
         int lx = e.x() - fp.ox, lz = e.z() - fp.oz;
         int half = 6;

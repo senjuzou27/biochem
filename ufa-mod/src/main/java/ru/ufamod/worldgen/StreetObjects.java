@@ -52,6 +52,11 @@ public final class StreetObjects {
                 case FOUNTAIN -> fountain(sink, p, y);
                 case STATUE, BUST, STELE, MEMORIAL, ARTWORK -> monument(sink, city, p, base, r);
                 case KIOSK -> kiosk(sink, city, p, base, r);
+                case CAR -> car(sink, p, base, r);
+                case CROSSING_SIGN -> {
+                    sink.column(p.x(), p.z(), base, base + 1, st(Blocks.IRON_BARS));
+                    sink.set(p.x(), base + 2, p.z(), st(Blocks.BLUE_CONCRETE));
+                }
                 default -> { }
             }
         }
@@ -246,6 +251,36 @@ public final class StreetObjects {
         int sx = x + along.getStepX() * 3, sz = z + along.getStepZ() * 3;
         sink.column(sx, sz, y, y + 1, st(Blocks.POLISHED_DEEPSLATE_WALL));
         sign(sink, sx, y + 2, sz, rotationOf(toRoad), "Остановка", l.size() > 0 ? l.get(0) : "", l.size() > 1 ? l.get(1) : "", "Автобус · Тролл.");
+    }
+
+    /** A parked car: four blocks long, two wide, with a glazed cabin. The anchor is its north-west corner. */
+    private static void car(ChunkSink sink, MapPoint p, int y, Random r) {
+        boolean alongX = Math.abs(p.dx()) > Math.abs(p.dz());
+        Block body, roof;
+        switch (p.name()) {
+            case "silver" -> { body = Blocks.LIGHT_GRAY_CONCRETE; roof = Blocks.LIGHT_GRAY_CARPET; }
+            case "black" -> { body = Blocks.BLACK_CONCRETE; roof = Blocks.BLACK_CARPET; }
+            case "gray" -> { body = Blocks.GRAY_CONCRETE; roof = Blocks.GRAY_CARPET; }
+            case "blue" -> { body = Blocks.BLUE_CONCRETE; roof = Blocks.BLUE_CARPET; }
+            case "red" -> { body = Blocks.RED_CONCRETE; roof = Blocks.RED_CARPET; }
+            case "cyan" -> { body = Blocks.CYAN_CONCRETE; roof = Blocks.CYAN_CARPET; }
+            case "brown" -> { body = Blocks.BROWN_CONCRETE; roof = Blocks.BROWN_CARPET; }
+            case "green" -> { body = Blocks.GREEN_CONCRETE; roof = Blocks.GREEN_CARPET; }
+            default -> { body = Blocks.WHITE_CONCRETE; roof = Blocks.WHITE_CARPET; }
+        }
+        // a hatchback or a van now and then: the cabin reaches the rear end
+        int cabinFrom = 1, cabinTo = r.nextInt(4) == 0 ? 3 : 2;
+        boolean flip = r.nextBoolean();
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 2; j++) {
+                int k = flip ? 3 - i : i;
+                int x = p.x() + (alongX ? i : j), z = p.z() + (alongX ? j : i);
+                sink.set(x, y, z, st(body));
+                if (k >= cabinFrom && k <= cabinTo) {
+                    sink.set(x, y + 1, z, st(Blocks.GRAY_STAINED_GLASS));
+                    sink.set(x, y + 2, z, st(roof));
+                }
+            }
     }
 
     private static void signals(ChunkSink sink, MapPoint p, int y) {

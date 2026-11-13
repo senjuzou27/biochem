@@ -19,12 +19,12 @@ public final class WalkTest {
     private static boolean passable(Model m, int x, int y, int z) {
         BlockState s = m.get(x, y, z);
         if (s == null || s.isAir()) return true;
-        return s.getBlock() instanceof DoorBlock || !s.blocksMotion();
+        return s.getBlock() instanceof DoorBlock || s.getBlock() instanceof net.minecraft.world.level.block.SignBlock || !s.blocksMotion();
     }
 
     private static boolean solid(Model m, int x, int y, int z) {
         BlockState s = m.get(x, y, z);
-        return s != null && s.blocksMotion() && !(s.getBlock() instanceof DoorBlock);
+        return s != null && s.blocksMotion() && !(s.getBlock() instanceof DoorBlock) && !(s.getBlock() instanceof net.minecraft.world.level.block.SignBlock);
     }
 
     private static boolean ramp(Model m, int x, int y, int z) {

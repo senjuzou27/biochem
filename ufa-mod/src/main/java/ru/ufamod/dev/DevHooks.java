@@ -87,13 +87,13 @@ public final class DevHooks {
             UfaMod.LOGGER.info("DEVTEST map of {} storey 1:\n{}", index, g.debugMap(1));
             UfaMod.LOGGER.info("DEVTEST reach of {} from {} -> {} ({} cells; digits = levels below the start):\n{}", index, start, out, seen.size(), sb);
         }
-        for (String role : new String[]{"dorm", "bsmu_main", "bsmu_anatomy", "bsmu_canteen", "library"}) {
+        for (String role : new String[]{"dorm", "bsmu_k7", "bsmu_anatomy", "bsmu_canteen", "library"}) {
             BuildingInfo b = city.role(role);
             BuildingGenerator g = Story.generate(city, b);
             if (g == null) continue;
             String[] marks = switch (role) {
                 case "dorm" -> new String[]{"wake"};
-                case "bsmu_main" -> new String[]{"guard", "lecture"};
+                case "bsmu_k7" -> new String[]{"guard", "lecture"};
                 case "bsmu_anatomy" -> new String[]{"exam"};
                 case "bsmu_canteen" -> new String[]{"canteen"};
                 default -> new String[]{"library"};

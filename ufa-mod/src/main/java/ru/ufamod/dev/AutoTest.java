@@ -151,8 +151,12 @@ public final class AutoTest {
         talk(NpcRole.DRIVER);
         step(60, "ride", () -> { });
         expect(Stage.WATCHMAN);
-        view(P.bsmuView, P.guard, -12);
+        view(P.bsmuView, P.guard, -18);
+        shot("04_bsmu_building_7");
+        view(P.mainView, P.mainDoor, -14);
         shot("04_bsmu_main_building");
+        view(P.mainDoor, P.mainDoor.offset(-6, 3, 0), -20);
+        shot("04_bsmu_main_entrance");
         view(P.bsmuHall, P.guard, 0);
         talk(NpcRole.WATCHMAN);
         expect(Stage.WATCHMAN);
@@ -163,13 +167,13 @@ public final class AutoTest {
         shot("05_bsmu_hall");
         talk(NpcRole.WATCHMAN);
         expect(Stage.LECTURE);
-        tp(P.lecture.offset(-3, 0, 0), -90, 5);
-        shot("06_lecture_hall");
+        view(P.lectureRoom, P.lecture, 5);
+        shot("06_biochemistry_class");
         talk(NpcRole.LECTURER);
         expect(Stage.LECTURE_RUNNING);
         step(520, "listen to the lecture", () -> { });
         expect(Stage.TO_EXAM);
-        view(P.bsmuView.offset(60, 0, 0), P.library, -15);
+        view(P.mainView.offset(4, 0, 40), P.library, -15);
         shot("07_national_library");
         view(P.examOut.offset(0, 0, 0), P.exam, -15);
         shot("09_anatomy_department");
@@ -276,7 +280,7 @@ public final class AutoTest {
         tp(street(700, 300), 135, -10);
         shot("26_wooden_houses");
         // high views
-        fly(P.bsmuView.getX() + 30.5, P.bsmuDoor.getY() + 45, P.bsmuView.getZ() + 0.5, 90, 35);
+        fly(P.mainView.getX() + 36.5, P.mainDoor.getY() + 45, P.mainView.getZ() + 0.5, 90, 35);
         shot("27_bsmu_from_above");
         fly(P.gostiny.getX() + 0.5, P.gostiny.getY() + 80, P.gostiny.getZ() + 60.5, 180, 50);
         shot("28_centre_from_above");
