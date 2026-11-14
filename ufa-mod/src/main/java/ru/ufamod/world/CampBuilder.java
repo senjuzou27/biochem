@@ -2,6 +2,7 @@ package ru.ufamod.world;
 
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.LadderBlock;
 import ru.ufamod.entity.NpcRole;
 
@@ -189,16 +190,25 @@ public class CampBuilder extends Build {
         fill(62, 1, z1 - 1, 118, 1, z1 - 1, Blocks.SPRUCE_FENCE);
         fill(74, 1, z2 + 1, 118, 1, z2 + 1, Blocks.SPRUCE_FENCE);
         set(66, 1, z1 - 1, AIR);
-        post(66, 1, z1 - 1, rot(N), "СТРЕЛЬБИЩЕ", "5 попаданий", "по мишеням", "из лука");
+        post(66, 1, z1 - 1, rot(N), "СТРЕЛЬБИЩЕ", "5 попаданий", "по мишеням", Military.guns() ? "АК-74М" : "из лука");
     }
 
     private void trenches() {
         fill(84, 0, 100, 118, 0, 124, Blocks.DIRT);
         fill(84, -3, 100, 118, -1, 124, Blocks.DIRT);
-        // a sample trench with sandbags
+        // a sample trench with sandbags (those of Superb Warfare when it is installed) and wire in front of it
         air(86, -1, 104, 100, 0, 105);
-        fill(86, 1, 103, 100, 1, 103, Blocks.SANDSTONE);
-        for (int x = 86; x <= 100; x += 3) set(x, 1, 103, slab(Blocks.SANDSTONE_SLAB));
+        BlockState sandbag = Military.block("superbwarfare:sandbag"), wire = Military.block("superbwarfare:barbed_wire");
+        if (sandbag != null) {
+            for (int x = 86; x <= 100; x++) {
+                c.set(x, 1, 103, sandbag);
+                if (x % 3 != 0) c.set(x, 2, 103, sandbag);
+            }
+        } else {
+            fill(86, 1, 103, 100, 1, 103, Blocks.SANDSTONE);
+            for (int x = 86; x <= 100; x += 3) set(x, 1, 103, slab(Blocks.SANDSTONE_SLAB));
+        }
+        if (wire != null) for (int x = 86; x <= 112; x++) c.set(x, 1, 101, wire);
         post(83, 1, 112, rot(W), "ОКОПЫ", "Выкопай", "12 блоков земли", "лопаткой");
         fill(84, 1, 99, 118, 1, 99, Blocks.SPRUCE_FENCE);
         fill(84, 1, 125, 118, 1, 125, Blocks.SPRUCE_FENCE);

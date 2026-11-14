@@ -932,6 +932,8 @@ public final class BuildingGenerator {
     private void ceilingLight(int lx, int lz, int storey) {
         int y = floorY[storey + 1];
         set(lx, y, lz, Blocks.GLOWSTONE);
+        BlockState pendant = storeyHeight(storey) >= 4 ? Furniture.pendant() : null;
+        if (pendant != null && m.isAir(fp.ox + lx, y - 1, fp.oz + lz)) set(lx, y - 1, lz, pendant);
         if (storey + 1 < levels && m.isAir(fp.ox + lx, y + 1, fp.oz + lz)) set(lx, y + 1, lz, Blocks.LIGHT_GRAY_CARPET);
     }
 
@@ -962,10 +964,10 @@ public final class BuildingGenerator {
         if (u == mid) {
             // keep the way from the door to the window free, except for a desk under the window
             if (v == 0 && depth >= 3 && (type.equals("dorm") || type.equals("bedroom") || type.equals("office"))) {
-                set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
-                if (hash(coord, s, 3) % 2 == 0) set(lx, y + 1, lz, hash(coord, s, 4) % 2 == 0 ? Blocks.POTTED_FERN : Blocks.POTTED_CACTUS);
+                desk(lx, y, lz, "oak", Furniture.present());
+                if (!Furniture.present() && hash(coord, s, 3) % 2 == 0) set(lx, y + 1, lz, hash(coord, s, 4) % 2 == 0 ? Blocks.POTTED_FERN : Blocks.POTTED_CACTUS);
             } else if (v == 1 && depth >= 4 && (type.equals("dorm") || type.equals("bedroom") || type.equals("office"))) {
-                set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, in));
+                chair(lx, y, lz, in);
             }
             return;
         }
@@ -982,7 +984,13 @@ public final class BuildingGenerator {
                 else if (u > 1 && u < last && v >= 1 && !doorRow) set(lx, y, lz, type.equals("ward") ? Blocks.WHITE_CARPET : carpet(h));
             }
             case "living" -> {
-                if (u == 1 && v >= 1 && v <= 2 && !doorRow) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, un));
+                if (u == 1 && v >= 1 && v <= 2 && !doorRow) {
+                    BlockState sofa = Furniture.sofa(un);
+                    set(lx, y, lz, sofa != null ? sofa : stair(Blocks.SPRUCE_STAIRS, un));
+                } else if (u == 2 && v == 1 && !doorRow && Furniture.present() && depth >= 3) {
+                    BlockState t = Furniture.state("light_wood_coffee_table_basic", "axis", in.getAxis() == Direction.Axis.X ? "x" : "z");
+                    if (t != null) set(lx, y, lz, t);
+                }
                 else if (u == last && v == 0) {
                     set(lx, y, lz, Blocks.BOOKSHELF);
                     set(lx, y + 1, lz, Blocks.BOOKSHELF);
@@ -994,27 +1002,27 @@ public final class BuildingGenerator {
             }
             case "kitchen" -> {
                 if (v == 0) {
-                    Block[] row = {Blocks.SMOKER, Blocks.CAULDRON, Blocks.CRAFTING_TABLE, Blocks.BARREL, Blocks.FURNACE};
-                    set(lx, y, lz, row[(u - 1) % row.length]);
+                    kitchenUnit(lx, y, lz, u - 1, in);
                 } else if (u == last && v == 1 && depth >= 3) {
-                    set(lx, y, lz, Blocks.IRON_BLOCK);
-                    set(lx, y + 1, lz, Blocks.IRON_BLOCK);
+                    BlockState fridge = Furniture.facing("white_fridge", un), freezer = Furniture.facing("white_freezer", un);
+                    set(lx, y, lz, fridge != null ? fridge : st(Blocks.IRON_BLOCK));
+                    set(lx, y + 1, lz, freezer != null ? freezer : st(Blocks.IRON_BLOCK));
                 } else if (u == 2 && v == depth - 2 && depth >= 4) {
-                    set(lx, y, lz, Blocks.SPRUCE_FENCE);
-                    set(lx, y + 1, lz, Blocks.WHITE_CARPET);
-                } else if (u == 1 && v == depth - 2 && depth >= 4) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, un));
+                    table(lx, y, lz, up.getAxis());
+                } else if (u == 1 && v == depth - 2 && depth >= 4) chair(lx, y, lz, un);
             }
             case "class" -> {
                 if (u == 1 && v == depth / 2) {
-                    set(lx, y, lz, Blocks.DARK_OAK_PLANKS);
+                    BlockState t = Furniture.desk("dark_wood");
+                    set(lx, y, lz, t != null ? t : st(Blocks.DARK_OAK_PLANKS));
                 } else if (u >= 3 && u < last && !doorRow) {
-                    if (u % 2 == 1) set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
-                    else set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, up));
-                } else if (u == last && !doorRow) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, up));
+                    if (u % 2 == 1) desk(lx, y, lz, "light_wood", false);
+                    else schoolChair(lx, y, lz, up);
+                } else if (u == last && !doorRow) schoolChair(lx, y, lz, up);
             }
             case "office" -> {
-                if ((u == 2 || u == last - 1) && v == 0) set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
-                else if ((u == 2 || u == last - 1) && v == 1 && depth >= 3) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, in));
+                if ((u == 2 || u == last - 1) && v == 0) desk(lx, y, lz, "oak", true);
+                else if ((u == 2 || u == last - 1) && v == 1 && depth >= 3) chair(lx, y, lz, in);
                 else if ((u == 1 || u == last) && doorRow && depth >= 2) {
                     set(lx, y, lz, Blocks.BOOKSHELF);
                     set(lx, y + 1, lz, Blocks.BOOKSHELF);
@@ -1032,7 +1040,7 @@ public final class BuildingGenerator {
                 if (u % 2 == 1 && v >= 1 && !doorRow) {
                     set(lx, y, lz, Blocks.BOOKSHELF);
                     set(lx, y + 1, lz, Blocks.BOOKSHELF);
-                } else if (v == 0 && u % 3 == 1) set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
+                } else if (v == 0 && u % 3 == 1) desk(lx, y, lz, "oak", true);
             }
             case "museum" -> {
                 if (u % 2 == 0 && v == 1 && depth >= 3) {
@@ -1043,16 +1051,18 @@ public final class BuildingGenerator {
             }
             case "canteen" -> {
                 if (u % 3 == 2 && v % 2 == 0 && !doorRow) {
-                    set(lx, y, lz, Blocks.SPRUCE_FENCE);
-                    set(lx, y + 1, lz, Blocks.WHITE_CARPET);
-                } else if (u % 3 == 1 && v % 2 == 0 && !doorRow && u != 1) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, un));
-                else if (u % 3 == 0 && v % 2 == 0 && !doorRow && u != last) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, up));
+                    table(lx, y, lz, up.getAxis());
+                } else if (u % 3 == 1 && v % 2 == 0 && !doorRow && u != 1) chair(lx, y, lz, un);
+                else if (u % 3 == 0 && v % 2 == 0 && !doorRow && u != last) chair(lx, y, lz, up);
             }
             case "anatomy" -> {
                 if ((u == 1 || u == last) && v % 2 == 0) {
                     set(lx, y, lz, hash(coord, v, 2) % 2 == 0 ? Blocks.BONE_BLOCK : Blocks.GLASS);
                     set(lx, y + 1, lz, Blocks.SKELETON_SKULL.defaultBlockState().setValue(SkullBlock.ROTATION, u == 1 ? rotationOf(up) : rotationOf(un)));
-                } else if (u >= 3 && u < last && v == 0) set(lx, y, lz, u % 2 == 1 ? slabTop(Blocks.SPRUCE_SLAB) : stair(Blocks.SPRUCE_STAIRS, in));
+                } else if (u >= 3 && u < last && v == 0) {
+                    if (u % 2 == 1) desk(lx, y, lz, "light_wood", false);
+                    else schoolChair(lx, y, lz, in);
+                }
             }
             case "storage" -> {
                 if ((u == 1 || u == last) && hash(coord, v, 6) % 3 == 0) {
@@ -1109,9 +1119,12 @@ public final class BuildingGenerator {
         switch (type) {
             case "class" -> {
                 if (v >= 3 && v <= 8 && u != 1 && u != 9) {
-                    if (v % 2 == 1) set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
-                    else set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, Direction.SOUTH));
-                } else if (v == 1 && u >= 3 && u <= 4) set(lx, y, lz, Blocks.DARK_OAK_PLANKS);
+                    if (v % 2 == 1) desk(lx, y, lz, "light_wood", false);
+                    else schoolChair(lx, y, lz, Direction.SOUTH);
+                } else if (v == 1 && u >= 3 && u <= 4) {
+                    BlockState t = Furniture.desk("dark_wood");
+                    set(lx, y, lz, t != null ? t : st(Blocks.DARK_OAK_PLANKS));
+                }
             }
             case "shop" -> {
                 if ((u == 2 || u == 8) && v >= 2 && v <= 8) {
@@ -1132,8 +1145,8 @@ public final class BuildingGenerator {
                 }
             }
             default -> {
-                if ((u == 2 || u == 7) && v % 3 == 2) set(lx, y, lz, slabTop(Blocks.SPRUCE_SLAB));
-                else if ((u == 3 || u == 8) && v % 3 == 2) set(lx, y, lz, stair(Blocks.SPRUCE_STAIRS, Direction.EAST));
+                if ((u == 2 || u == 7) && v % 3 == 2) desk(lx, y, lz, "oak", true);
+                else if ((u == 3 || u == 8) && v % 3 == 2) chair(lx, y, lz, Direction.EAST);
             }
         }
     }
@@ -1141,9 +1154,58 @@ public final class BuildingGenerator {
     private void bed(int lx, int y, int lz, Direction facing, Block bed) {
         int hx = lx + facing.getStepX(), hz = lz + facing.getStepZ();
         if (roleAt(hx, hz) != ROOM || keepFree(hx, hz) || !m.isAir(fp.ox + hx, y, fp.oz + hz) || !m.isAir(fp.ox + lx, y, fp.oz + lz)) return;
+        BlockState mod = Furniture.bed(bed);
+        if (mod != null) {
+            BlockState f = mod.hasProperty(BedBlock.FACING) ? mod.setValue(BedBlock.FACING, facing) : mod;
+            if (f.hasProperty(BedBlock.PART)) {
+                set(lx, y, lz, f.setValue(BedBlock.PART, BedPart.FOOT));
+                set(hx, y, hz, f.setValue(BedBlock.PART, BedPart.HEAD));
+                return;
+            }
+        }
         BlockState s = bed.defaultBlockState().setValue(BedBlock.FACING, facing);
         set(lx, y, lz, s.setValue(BedBlock.PART, BedPart.FOOT));
         set(hx, y, hz, s.setValue(BedBlock.PART, BedPart.HEAD));
+    }
+
+    // ------------------------------------------------------------------ furniture: the mod's pieces or vanilla stand-ins
+
+    private void chair(int lx, int y, int lz, Direction back) {
+        BlockState c = Furniture.chair(back, "oak_chair");
+        set(lx, y, lz, c != null ? c : stair(Blocks.SPRUCE_STAIRS, back));
+    }
+
+    private void schoolChair(int lx, int y, int lz, Direction back) {
+        BlockState c = Furniture.chair(back, "light_wood_chair_modern");
+        set(lx, y, lz, c != null ? c : stair(Blocks.SPRUCE_STAIRS, back));
+    }
+
+    private void desk(int lx, int y, int lz, String wood, boolean lamp) {
+        BlockState d = Furniture.desk(wood);
+        set(lx, y, lz, d != null ? d : slabTop(Blocks.SPRUCE_SLAB));
+        BlockState l = lamp ? Furniture.lamp() : null;
+        if (l != null && m.isAir(fp.ox + lx, y + 1, fp.oz + lz)) set(lx, y + 1, lz, l);
+    }
+
+    private void table(int lx, int y, int lz, Direction.Axis axis) {
+        BlockState t = Furniture.table(axis);
+        if (t != null) set(lx, y, lz, t);
+        else {
+            set(lx, y, lz, Blocks.SPRUCE_FENCE);
+            set(lx, y + 1, lz, Blocks.WHITE_CARPET);
+        }
+    }
+
+    /** A kitchen unit along the window wall; the vanilla block is used when the mod is missing. */
+    private void kitchenUnit(int lx, int y, int lz, int k, Direction front) {
+        String[] mod = {"white_stove", "light_wood_kitchen_sink", "light_wood_kitchen_counter", "light_wood_kitchen_drawer", "light_wood_kitchen_counter_oven"};
+        Block[] vanilla = {Blocks.SMOKER, Blocks.CAULDRON, Blocks.CRAFTING_TABLE, Blocks.BARREL, Blocks.FURNACE};
+        BlockState b = Furniture.facing(mod[k % mod.length], front);
+        set(lx, y, lz, b != null ? b : st(vanilla[k % vanilla.length]));
+        if (b != null && k % mod.length == 0) {
+            BlockState hood = Furniture.facing("white_oven_range_hood", front);
+            if (hood != null && storeyHeight(0) >= 3) set(lx, y + 2, lz, hood);
+        }
     }
 
     private void door(int lx, int y, int lz, Direction facing, Block door) {

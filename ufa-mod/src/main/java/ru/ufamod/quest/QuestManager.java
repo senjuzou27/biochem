@@ -43,6 +43,7 @@ import ru.ufamod.entity.NpcRole;
 import ru.ufamod.net.Net;
 import ru.ufamod.net.OpenExamPacket;
 import ru.ufamod.registry.ModItems;
+import ru.ufamod.world.Military;
 import ru.ufamod.world.Places;
 import ru.ufamod.world.Plan;
 import ru.ufamod.world.UfaWorld;
@@ -139,7 +140,7 @@ public final class QuestManager {
             case ARREST -> new Objective("…", null);
             case CAMP_REPORT -> new Objective("Учебный центр · Доложи сержанту на плацу", Plan.CAMP_SERGEANT);
             case CAMP_COURSE -> new Objective("Пробеги полосу препятствий до финиша", Plan.CAMP_COURSE_END);
-            case CAMP_RANGE -> new Objective("Стрельбище: попади в мишени из лука (" + count + "/" + RANGE_HITS + ")", Plan.CAMP_RANGE);
+            case CAMP_RANGE -> new Objective("Стрельбище: попади в мишени (" + count + "/" + RANGE_HITS + ")", Plan.CAMP_RANGE);
             case CAMP_TRENCH -> new Objective("Окопы: выкопай землю лопаткой (" + count + "/" + TRENCH_BLOCKS + ")", Plan.CAMP_TRENCH);
             case CAMP_TRUCK -> new Objective("Погрузка: поднимись в кузов «Урала»", Plan.CAMP_TRUCK);
             default -> null;
@@ -284,15 +285,7 @@ public final class QuestManager {
         if (!(event.getProjectile() instanceof AbstractArrow arrow) || !(arrow.getOwner() instanceof ServerPlayer player)) return;
         if (stage(player) != Stage.CAMP_RANGE || !(event.getRayTraceResult() instanceof BlockHitResult hit)) return;
         if (!player.level().getBlockState(hit.getBlockPos()).is(Blocks.TARGET)) return;
-        CompoundTag d = data(player);
-        int count = d.getInt("count") + 1;
-        d.putInt("count", count);
-        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.7f, 1.0f);
-        if (count >= RANGE_HITS) {
-            setStage(player, Stage.CAMP_TRENCH);
-            player.getInventory().add(Loot.sapperShovel());
-            say(player, "Сержант Громов", "Сойдёт. Теперь инженерная подготовка. Лопатку в руки — и копать окоп. Двенадцать блоков!");
-        } else updateBar(player);
+        rangeHit(player);
     }
 
     @SubscribeEvent
@@ -349,9 +342,10 @@ public final class QuestManager {
             case CAMP_COURSE -> {
                 if (timer % 5 == 0 && Plan.CAMP_COURSE_FINISH.contains(player.position())) {
                     setStage(player, Stage.CAMP_RANGE);
-                    player.getInventory().add(new ItemStack(Items.BOW));
-                    player.getInventory().add(new ItemStack(Items.ARROW, 48));
-                    say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Автоматов на всех не хватило — держи лук. Пять попаданий в мишени!");
+                    if (giveRangeKit(player))
+                        say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Получи автомат АК-74М и три магазина. Огонь одиночными, пять попаданий в мишени!");
+                    else
+                        say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Автоматов на всех не хватило — держи лук. Пять попаданий в мишени!");
                 }
             }
             case CAMP_TRUCK -> {
@@ -634,19 +628,59 @@ public final class QuestManager {
         if (ufa == null) return;
         player.getInventory().clearContent();
         player.removeAllEffects();
-        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(ModItems.CAMO_HELMET.get()));
-        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.CAMO_JACKET.get()));
+        ItemStack helmet = Military.helmet(), vest = Military.vest();
+        player.setItemSlot(EquipmentSlot.HEAD, helmet != null ? helmet : new ItemStack(ModItems.CAMO_HELMET.get()));
+        player.setItemSlot(EquipmentSlot.CHEST, vest != null ? vest : new ItemStack(ModItems.CAMO_JACKET.get()));
         player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(ModItems.CAMO_TROUSERS.get()));
         player.setItemSlot(EquipmentSlot.FEET, new ItemStack(ModItems.ARMY_BOOTS.get()));
         player.getInventory().add(new ItemStack(ModItems.SUMMONS.get()));
         player.getInventory().add(new ItemStack(Items.BREAD, 6));
         Vec3 p = Plan.CAMP_ARRIVE;
         player.teleportTo(ufa, p.x, p.y, p.z, -90f, 0f);
+        Military.setUpCamp(ufa);
         player.setRespawnPosition(UfaWorld.UFA, BlockPos.containing(p), -90f, true, false);
         player.server.overworld().setDayTime(23500);
         setStage(player, Stage.CAMP_REPORT);
         narrate(player, "Учебный центр. Подъём в шесть, халат сменили на камуфляж.");
         say(player, "Сержант Громов", "Новенький! Ко мне, на плац!");
+    }
+
+    /** The rifle and its rounds with the gun mod, a bow without it; true for the rifle. */
+    private static boolean giveRangeKit(ServerPlayer player) {
+        ItemStack rifle = Military.rifle(), ammo = Military.ammo(90);
+        if (rifle != null && ammo != null) {
+            player.getInventory().add(rifle);
+            player.getInventory().add(ammo);
+            return true;
+        }
+        player.getInventory().add(new ItemStack(Items.BOW));
+        player.getInventory().add(new ItemStack(Items.ARROW, 48));
+        return false;
+    }
+
+    /** A hit on a target dummy of Superb Warfare counts on the range like an arrow in a target block. */
+    @SubscribeEvent
+    public static void onTargetHurt(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (!(event.getSource().getEntity() instanceof ServerPlayer player) || stage(player) != Stage.CAMP_RANGE) return;
+        if (!Military.isTarget(event.getEntity())) return;
+        if (event.getSource().getDirectEntity() == player) return;   // a punch is not a shot
+        CompoundTag d = data(player);
+        long now = player.level().getGameTime();
+        if (now - d.getLong("lastHit") < 6) return;   // one count per shot, not per pellet or tick
+        d.putLong("lastHit", now);
+        rangeHit(player);
+    }
+
+    private static void rangeHit(ServerPlayer player) {
+        CompoundTag d = data(player);
+        int count = d.getInt("count") + 1;
+        d.putInt("count", count);
+        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.7f, 1.0f);
+        if (count >= RANGE_HITS) {
+            setStage(player, Stage.CAMP_TRENCH);
+            player.getInventory().add(Loot.sapperShovel());
+            say(player, "Сержант Громов", "Сойдёт. Теперь инженерная подготовка. Лопатку в руки — и копать окоп. Двенадцать блоков!");
+        } else updateBar(player);
     }
 
     private static void badEnding(ServerPlayer player) {
@@ -669,10 +703,7 @@ public final class QuestManager {
             arriveAtCamp(player);
             return;
         }
-        if (stage == Stage.CAMP_RANGE) {
-            player.getInventory().add(new ItemStack(Items.BOW));
-            player.getInventory().add(new ItemStack(Items.ARROW, 48));
-        }
+        if (stage == Stage.CAMP_RANGE) giveRangeKit(player);
         if (stage == Stage.CAMP_TRENCH) player.getInventory().add(Loot.sapperShovel());
         setStage(player, stage);
     }

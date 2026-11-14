@@ -210,7 +210,22 @@ public final class AutoTest {
         tp(cx + 145.5, cy, cz + 27.5, 90, 0);
         step(30, "wait", () -> { });
         expect(Stage.CAMP_RANGE);
+        tp(cx + 92.5, cy, cz + 97.5, 180, 4);
+        step(60, "let the vehicles load", () -> { });
+        shot("13b_camp_vehicles");
         tp(cx + 70.5, cy, cz + 64.5, -90, 0);
+        step(10, "weapon in hand", () -> {
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack it = player.getInventory().getItem(i);
+                if (it.is(net.minecraft.world.item.Items.BOW) || it.getItem().builtInRegistryHolder().key().location().toString().equals("tacz:modern_kinetic_gun")) {
+                    player.getInventory().setItem(i, ItemStack.EMPTY);
+                    player.setItemInHand(InteractionHand.MAIN_HAND, it);
+                    break;
+                }
+            }
+        });
+        step(30, "aim", () -> { });
+        shot("13c_range");
         for (int i = 0; i < 5; i++) {
             final int n = i;
             step(25, "shoot target " + n, () -> {
