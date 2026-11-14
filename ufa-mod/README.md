@@ -47,6 +47,14 @@
 | ![Общежитие](docs/screenshots/dormitory.png) | ![Комната в общежитии](docs/screenshots/dorm_room.png) |
 | ![Памятник Салавату Юлаеву](docs/screenshots/salavat.png) | ![Монумент Дружбы](docs/screenshots/friendship_monument.png) |
 
+С дополнительными модами (мебель, оружие, техника):
+
+| | |
+| --- | --- |
+| ![Комната в общежитии с мебелью из мода](docs/screenshots/dorm_room_furniture.png) | ![Техника в учебном центре](docs/screenshots/camp_vehicles.png) |
+| ![Стрельбище: АК-74М](docs/screenshots/range_ak74m.png) | ![Блиндаж на передовой](docs/screenshots/front_dugout.png) |
+| ![Окоп: вид из бойницы](docs/screenshots/front_trench.png) | ![Раненый на наблюдательном посту](docs/screenshots/front_wounded.png) |
+
 ## Как играть
 
 1. Установи [Forge для 1.20.1](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.20.1.html)
