@@ -26,6 +26,7 @@ public final class DevHooks {
         int ok = 0, empty = 0, failed = 0;
         int multi = 0, noStairs = 0, topOk = 0, topJump = 0, topStuck = 0, groundStuck = 0;
         long volume = 0;
+        int opened = 0, ladders = 0;
         StringBuilder stuck = new StringBuilder();
         for (BuildingInfo b : city.buildings) {
             try {
@@ -36,6 +37,8 @@ public final class DevHooks {
                 }
                 ok++;
                 volume += g.m.volume();
+                opened += g.openedWalls;
+                ladders += g.ladders;
                 // can the ground floor and the top floor be left on foot?
                 BlockPos ground = null, top = null;
                 for (BuildingGenerator.RoomRef r : g.rooms) {
@@ -65,12 +68,17 @@ public final class DevHooks {
         UfaMod.LOGGER.info("DEVTEST walking: ground floor stuck {}; of {} multi-storey buildings the top floor is reachable by stairs in {}, only by jumping in {}, not at all in {}",
                 groundStuck, multi, topOk, topJump, topStuck);
         UfaMod.LOGGER.info("DEVTEST stuck examples:{}", stuck);
-        for (int index : new int[]{city.role("dorm").index}) {
+        UfaMod.LOGGER.info("DEVTEST repairs: {} walls opened, {} ladders", opened, ladders);
+        int[] debug = System.getProperty("ufamod.debugBuildings") == null ? new int[]{city.role("dorm").index}
+                : java.util.Arrays.stream(System.getProperty("ufamod.debugBuildings").split(",")).mapToInt(Integer::parseInt).toArray();
+        for (int index : debug) {
             BuildingGenerator g = Story.generate(city, city.buildingInfo(index));
             if (g == null || Story.MARKS.get("wake") == null) continue;
             BlockPos start = null;
             for (BuildingGenerator.RoomRef r : g.rooms) if (r.storey() == 1 && start == null) start = BuildingGenerator.roomCell(r, r.width() / 2, r.depth() - 1);
             if (index == city.role("dorm").index) start = Story.MARKS.get("wake");
+            if (start == null) for (BuildingGenerator.RoomRef r : g.rooms) if (start == null) start = BuildingGenerator.roomCell(r, r.width() / 2, r.depth() - 1);
+            if (start == null) continue;
             java.util.Set<Long> seen = new java.util.HashSet<>();
             boolean out = WalkTest.canLeave(city, g, start, false, seen);
             StringBuilder sb = new StringBuilder();

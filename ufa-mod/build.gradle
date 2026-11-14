@@ -40,6 +40,7 @@ minecraft {
             // Developer switches: -PufaDump=<dir> renders the city to PNG files, -PufaExit stops the server once the city is built.
             if (project.hasProperty('ufaDump')) systemProperty 'ufamod.dump', project.property('ufaDump')
             if (project.hasProperty('ufaExit')) systemProperty 'ufamod.exitAfterBuild', 'true'
+            if (project.hasProperty('ufaDebug')) systemProperty 'ufamod.debugBuildings', project.property('ufaDebug')
             // -PufaAuto plays the whole story automatically and takes screenshots (see ru.ufamod.dev.AutoTest).
             if (project.hasProperty('ufaAuto')) systemProperty 'ufamod.autotest', 'true'
 

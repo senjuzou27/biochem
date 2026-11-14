@@ -146,7 +146,291 @@ public final class BuildingGenerator {
         g.stairs();
         g.doorsAndSigns();
         g.extras();
+        g.repairWalkways();
         return g;
+    }
+
+    // ------------------------------------------------------------------ making sure every floor can be walked
+
+    /** Counts of the repairs, for the developer statistics. */
+    public int openedWalls, ladders;
+
+    /** Feet position on storey s of a column. */
+    private BlockPos feet(int lx, int lz, int s) {
+        return new BlockPos(fp.ox + lx, floorY[s] + 1, fp.oz + lz);
+    }
+
+    private boolean interiorRole(byte r) {
+        return r == ROOM || r == CORR || r == CORE || r == IDOOR || r == PART || r == CWALL || r == SWALL;
+    }
+
+    /**
+     * After everything is built: walks the building from its doors like a player, then opens partitions or
+     * clears furniture that cut rooms off, and puts a ladder through the floor where a storey cannot be
+     * reached by the stairs at all (in houses too narrow for a staircase).
+     */
+    private void repairWalkways() {
+        java.util.Set<Long> seen = new java.util.HashSet<>();
+        List<BlockPos> starts = new ArrayList<>();
+        for (Entrance e : entrances) starts.add(new BlockPos(e.x(), base + 1, e.z()));
+        WalkTest.reach(city, this, starts, seen);
+        for (int s = 0; s < levels; s++) {
+            openUp(s, seen);
+            // parts that no partition opens into: a door from the street on the ground floor, a ladder above it
+            for (int tries = 0; tries < 8; tries++) {
+                BlockPos in = null;
+                for (java.util.Set<Long> region : lostRegions(s, seen)) {
+                    in = s == 0 ? streetDoor(region) : ladderInto(s - 1, region, seen);
+                    if (in != null) break;
+                }
+                if (in == null) break;
+                WalkTest.reach(city, this, List.of(in), seen);
+                openUp(s, seen);
+            }
+            if (s + 1 < levels && !anyReached(s + 1, seen)) {
+                BlockPos l = ladder(s, seen);
+                if (l != null) WalkTest.reach(city, this, List.of(l), seen);
+            }
+        }
+    }
+
+    private boolean standableRoom(int lx, int lz, int s) {
+        byte r = roleAt(lx, lz);
+        if (r != ROOM && r != CORR && r != CORE && r != IDOOR) return false;
+        BlockPos f = feet(lx, lz, s);
+        return WalkTest.standable(m, f.getX(), f.getY(), f.getZ());
+    }
+
+    private boolean anyReached(int s, java.util.Set<Long> seen) {
+        for (int lz = 0; lz < d; lz++)
+            for (int lx = 0; lx < w; lx++)
+                if (standableRoom(lx, lz, s) && seen.contains(feet(lx, lz, s).asLong())) return true;
+        return false;
+    }
+
+    /**
+     * Opens the way into every part of storey s that is cut off but touches a reached part through one blocked
+     * cell: partitions first, furniture only where there is no other way. Nooks of a few cells behind a bed or a
+     * wardrobe are left alone.
+     */
+    private void openUp(int s, java.util.Set<Long> seen) {
+        int F = floorY[s];
+        for (int round = 0; round < 400; round++) {
+            // the parts of this storey nobody can reach yet, and their sizes
+            int[] comp = new int[w * d];
+            List<Integer> size = new ArrayList<>();
+            size.add(0);
+            java.util.ArrayDeque<int[]> q = new java.util.ArrayDeque<>();
+            for (int lz = 0; lz < d; lz++)
+                for (int lx = 0; lx < w; lx++) {
+                    if (comp[idx(lx, lz)] != 0 || !lost(lx, lz, s, seen)) continue;
+                    int id = size.size(), n = 0;
+                    comp[idx(lx, lz)] = id;
+                    q.add(new int[]{lx, lz});
+                    while (!q.isEmpty()) {
+                        int[] c = q.poll();
+                        n++;
+                        for (Direction dir : Direction.Plane.HORIZONTAL) {
+                            int nx = c[0] + dir.getStepX(), nz = c[1] + dir.getStepZ();
+                            if (!valid(nx, nz) || comp[idx(nx, nz)] != 0 || !lost(nx, nz, s, seen)) continue;
+                            comp[idx(nx, nz)] = id;
+                            q.add(new int[]{nx, nz});
+                        }
+                    }
+                    size.add(n);
+                }
+            if (size.size() == 1) return;
+            int[] pick = null;
+            int[] pick2 = null;
+            for (int phase = 0; phase < 2 && pick == null; phase++)
+                for (int lz = 1; lz < d - 1 && pick == null; lz++)
+                    for (int lx = 1; lx < w - 1 && pick == null; lx++) {
+                        byte r = roleAt(lx, lz);
+                        boolean wall = r == PART || r == CWALL || r == IDOOR || r == SWALL;
+                        boolean furniture = r == ROOM || r == CORR || r == CORE;
+                        if (phase == 0 ? !wall : !furniture) continue;
+                        int wx = fp.ox + lx, wz = fp.oz + lz;
+                        if (WalkTest.passable(m, wx, F + 1, wz) && WalkTest.passable(m, wx, F + 2, wz)) continue;
+                        if (!WalkTest.solid(m, wx, F, wz)) continue;
+                        BlockState below = m.get(wx, F, wz);
+                        if (below != null && below.getBlock() instanceof StairBlock) continue;
+                        boolean reachedSide = false;
+                        int lostSize = 0;
+                        for (Direction dir : Direction.Plane.HORIZONTAL) {
+                            int nx = lx + dir.getStepX(), nz = lz + dir.getStepZ();
+                            if (!standableRoom(nx, nz, s)) continue;
+                            if (seen.contains(feet(nx, nz, s).asLong())) reachedSide = true;
+                            else if (comp[idx(nx, nz)] > 0) lostSize = Math.max(lostSize, size.get(comp[idx(nx, nz)]));
+                        }
+                        if (reachedSide && lostSize >= 4) pick = new int[]{lx, lz};
+                    }
+            if (pick == null) {
+                // a partition with a cupboard behind it: two blocked cells in a row
+                for (int lz = 1; lz < d - 1 && pick == null; lz++)
+                    for (int lx = 1; lx < w - 1 && pick == null; lx++) {
+                        if (!lost(lx, lz, s, seen) || size.get(comp[idx(lx, lz)]) < 4) continue;
+                        for (Direction dir : Direction.Plane.HORIZONTAL) {
+                            int ax = lx + dir.getStepX(), az = lz + dir.getStepZ(), bx = ax + dir.getStepX(), bz = az + dir.getStepZ();
+                            int cx = bx + dir.getStepX(), cz = bz + dir.getStepZ();
+                            if (!blockedInterior(ax, az, F) || !blockedInterior(bx, bz, F)) continue;
+                            if (!standableRoom(cx, cz, s) || !seen.contains(feet(cx, cz, s).asLong())) continue;
+                            pick = new int[]{ax, az};
+                            pick2 = new int[]{bx, bz};
+                            break;
+                        }
+                    }
+            }
+            if (pick == null) return;
+            int wx = fp.ox + pick[0], wz = fp.oz + pick[1];
+            for (int y = F + 1; y <= F + 2; y++) clearCell(wx, y, wz);
+            if (pick2 != null) for (int y = F + 1; y <= F + 2; y++) clearCell(fp.ox + pick2[0], y, fp.oz + pick2[1]);
+            openedWalls++;
+            WalkTest.reach(city, this, List.of(feet(pick[0], pick[1], s)), seen);
+        }
+    }
+
+    /** The largest part of storey s (at least four cells) that cannot be reached, as packed local cells. */
+    private List<java.util.Set<Long>> lostRegions(int s, java.util.Set<Long> seen) {
+        boolean[] done = new boolean[w * d];
+        List<java.util.Set<Long>> all = new ArrayList<>();
+        java.util.ArrayDeque<int[]> q = new java.util.ArrayDeque<>();
+        for (int lz = 0; lz < d; lz++)
+            for (int lx = 0; lx < w; lx++) {
+                if (done[idx(lx, lz)] || !lost(lx, lz, s, seen)) continue;
+                java.util.Set<Long> region = new java.util.HashSet<>();
+                done[idx(lx, lz)] = true;
+                q.add(new int[]{lx, lz});
+                while (!q.isEmpty()) {
+                    int[] c = q.poll();
+                    region.add(((long) c[0] << 32) | (c[1] & 0xffffffffL));
+                    for (Direction dir : Direction.Plane.HORIZONTAL) {
+                        int nx = c[0] + dir.getStepX(), nz = c[1] + dir.getStepZ();
+                        if (!valid(nx, nz) || done[idx(nx, nz)] || !lost(nx, nz, s, seen)) continue;
+                        done[idx(nx, nz)] = true;
+                        q.add(new int[]{nx, nz});
+                    }
+                }
+                if (region.size() >= 4) all.add(region);
+            }
+        all.sort((a, b2) -> b2.size() - a.size());
+        return all;
+    }
+
+    private static int lxOf(long packed) {
+        return (int) (packed >> 32);
+    }
+
+    private static int lzOf(long packed) {
+        return (int) packed;
+    }
+
+    /** A door from the street into a cut-off part of the ground floor, where the ground outside is level. */
+    @javax.annotation.Nullable
+    private BlockPos streetDoor(java.util.Set<Long> region) {
+        for (long c : region) {
+            int lx = lxOf(c), lz = lzOf(c);
+            for (Direction out : Direction.Plane.HORIZONTAL) {
+                int wlx = lx + out.getStepX(), wlz = lz + out.getStepZ();
+                if (roleAt(wlx, wlz) != WALL || fp.normalAt(wlx, wlz) != out) continue;
+                int ox = fp.ox + wlx + out.getStepX(), oz = fp.oz + wlz + out.getStepZ();
+                if (city.building(ox, oz) != 0 || Math.abs(city.height(ox, oz) - base) > 1) continue;
+                int wx = fp.ox + wlx, wz = fp.oz + wlz;
+                if (!WalkTest.solid(m, wx, base, wz)) continue;
+                outerDoor(wlx, wlz, out, false);
+                doorCells.add(new int[]{wlx, wlz});
+                openedWalls++;
+                return new BlockPos(wx, base + 1, wz);
+            }
+        }
+        return null;
+    }
+
+    /** A ladder from a reached spot on storey s up into a cut-off part of storey s + 1. */
+    @javax.annotation.Nullable
+    private BlockPos ladderInto(int s, java.util.Set<Long> region, java.util.Set<Long> seen) {
+        return ladder(s, seen, region);
+    }
+
+    /** An inside cell with a floor that something stands on: a partition or furniture, not a stair or an outer wall. */
+    private boolean blockedInterior(int lx, int lz, int F) {
+        byte r = roleAt(lx, lz);
+        if (!interiorRole(r)) return false;
+        int wx = fp.ox + lx, wz = fp.oz + lz;
+        if (WalkTest.passable(m, wx, F + 1, wz) && WalkTest.passable(m, wx, F + 2, wz)) return false;
+        BlockState below = m.get(wx, F, wz);
+        return WalkTest.solid(m, wx, F, wz) && !(below.getBlock() instanceof StairBlock);
+    }
+
+    private boolean lost(int lx, int lz, int s, java.util.Set<Long> seen) {
+        return standableRoom(lx, lz, s) && !seen.contains(feet(lx, lz, s).asLong());
+    }
+
+    private void clearCell(int wx, int y, int wz) {
+        BlockState b0 = m.get(wx, y, wz);
+        if (b0 == null || b0.isAir()) return;
+        if (b0.getBlock() instanceof BedBlock) {
+            Direction f = b0.getValue(BedBlock.FACING);
+            Direction other = b0.getValue(BedBlock.PART) == BedPart.FOOT ? f : f.getOpposite();
+            m.set(wx + other.getStepX(), y, wz + other.getStepZ(), Blocks.AIR.defaultBlockState());
+        }
+        if (b0.getBlock() instanceof DoorBlock) {
+            int oy = b0.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? y + 1 : y - 1;
+            m.set(wx, oy, wz, Blocks.AIR.defaultBlockState());
+        }
+        m.set(wx, y, wz, Blocks.AIR.defaultBlockState());
+    }
+
+    /**
+     * A ladder from a reached place on storey s up through a hole in the ceiling to storey s + 1,
+     * against a solid wall. Returns the feet position at its top, or null when none fits.
+     */
+    @javax.annotation.Nullable
+    private BlockPos ladder(int s, java.util.Set<Long> seen) {
+        return ladder(s, seen, null);
+    }
+
+    /** With a target region, the ladder has to come up inside it. */
+    @javax.annotation.Nullable
+    private BlockPos ladder(int s, java.util.Set<Long> seen, @javax.annotation.Nullable java.util.Set<Long> target) {
+        int F = floorY[s], T = floorY[s + 1];
+        for (int pass = 0; pass < 2; pass++)
+            for (int lz = 1; lz < d - 1; lz++)
+                for (int lx = 1; lx < w - 1; lx++) {
+                    byte r = roleAt(lx, lz);
+                    // first try rooms and corridors, then any reached spot
+                    if (pass == 0 && r != ROOM && r != CORR && r != CORE) continue;
+                    if (r == STAIR || r == WALL || r == OUT || r == IDOOR) continue;
+                    if (!seen.contains(feet(lx, lz, s).asLong())) continue;
+                    if (target != null && !target.contains(((long) lx << 32) | (lz & 0xffffffffL))) continue;
+                    int wx = fp.ox + lx, wz = fp.oz + lz;
+                    if (keepFree(lx, lz)) continue;
+                    // the cell above must be part of the upper storey's rooms
+                    byte up = roleAt(lx, lz);
+                    if (up != ROOM && up != CORR && up != CORE) continue;
+                    for (Direction wall : Direction.Plane.HORIZONTAL) {
+                        int bx = wx + wall.getStepX(), bz = wz + wall.getStepZ();
+                        boolean sturdy = true;
+                        for (int y = F + 1; y <= T + 1 && sturdy; y++) {
+                            BlockState b2 = m.get(bx, y, bz);
+                            if (b2 == null || !b2.isCollisionShapeFullBlock(net.minecraft.world.level.EmptyBlockGetter.INSTANCE, BlockPos.ZERO)) sturdy = false;
+                        }
+                        if (!sturdy) continue;
+                        // the way off the ladder at the top: the cell opposite the wall must be free floor
+                        int ox = wx - wall.getStepX(), oz = wz - wall.getStepZ();
+                        byte or = roleAt(lx - wall.getStepX(), lz - wall.getStepZ());
+                        if (or != ROOM && or != CORR && or != CORE) continue;
+                        if (target != null && !target.contains(((long) (lx - wall.getStepX()) << 32) | ((lz - wall.getStepZ()) & 0xffffffffL))) continue;
+                        if (!WalkTest.solid(m, ox, T, oz)) continue;
+                        for (int y = F + 1; y <= T + 2; y++) clearCell(wx, y, wz);
+                        for (int y = T + 1; y <= T + 2; y++) clearCell(ox, y, oz);
+                        BlockState l = Blocks.LADDER.defaultBlockState().setValue(net.minecraft.world.level.block.LadderBlock.FACING, wall.getOpposite());
+                        for (int y = F + 1; y <= T + 1; y++) m.set(wx, y, wz, l);
+                        ladders++;
+                        WalkTest.reach(city, this, List.of(new BlockPos(wx, F + 1, wz)), seen);
+                        return new BlockPos(wx, T + 1, wz);
+                    }
+                }
+        return null;
     }
 
     // ------------------------------------------------------------------ small helpers
