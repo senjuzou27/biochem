@@ -113,7 +113,6 @@ public class NpcEntity extends PathfinderMob {
             enemyTick();
             return;
         }
-        if (getRole() == NpcRole.WOUNDED && getPose() != net.minecraft.world.entity.Pose.SWIMMING) setPose(net.minecraft.world.entity.Pose.SWIMMING);
         if (follow != null && tickCount % 4 == 0) {
             Player target = level().getPlayerByUUID(follow);
             // come up to the player but keep a polite three blocks away

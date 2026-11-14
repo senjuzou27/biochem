@@ -20,6 +20,16 @@ public class NpcRenderer extends HumanoidMobRenderer<NpcEntity, PlayerModel<NpcE
         super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
     }
 
+    /** The wounded soldier lies face down on the ground, the way a swimming player is drawn. */
+    @Override
+    protected void setupRotations(NpcEntity entity, com.mojang.blaze3d.vertex.PoseStack pose, float age, float yaw, float partial) {
+        super.setupRotations(entity, pose, age, yaw, partial);
+        if (entity.getRole() == NpcRole.WOUNDED) {
+            pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(-90f));
+            pose.translate(0f, -1.0f, 0.3f);
+        }
+    }
+
     @Override
     public ResourceLocation getTextureLocation(NpcEntity entity) {
         NpcRole role = entity.getRole();

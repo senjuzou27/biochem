@@ -124,7 +124,7 @@ public class FrontBuilder extends Build {
             set(x0 + 3, 0, z, Blocks.STRIPPED_SPRUCE_LOG);
             // the parapet: sandbags with loopholes
             set(x0 + 3, 1, z, z % 3 == 0 ? AIR : sandbag);
-            set(x0 + 4, 1, z, sandbag);
+            set(x0 + 4, 1, z, z % 3 == 0 ? AIR : sandbag);
             if (z % 3 != 0) set(x0 + 4, 2, z, sandbag);
             // the spoil heap behind
             set(x0 - 2, 1, z, Blocks.COARSE_DIRT);
