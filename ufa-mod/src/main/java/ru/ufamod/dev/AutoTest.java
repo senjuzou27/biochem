@@ -343,6 +343,36 @@ public final class AutoTest {
         shot("23_old_quarter");
         tp(street(900, -900), 45, -12);
         shot("24_residential_quarter");
+        // the landmarks checked against street panoramas
+        int[][] looks = {
+                {-1046, 73, -978, 147}, // toratau
+                {1485, 17, 1459, -60}, // ar_rahim
+                {-132, 357, -90, 431}, // government_house
+                {-402, -1319, -345, -1286}, // trade_unions
+                {363, 68, 330, 6}, // crowne_plaza
+                {378, 85, 509, 36}, // zemstvo
+                {235, -1241, 148, -1197}, // concert_hall
+                {-197, 357, -162, 225}, // drama_theatre
+                {-562, -814, -484, -811}, // philharmonic
+                {471, 540, 497, 472}, // first_mosque
+                {33, -1253, -23, -1208}, // hotel_bashkiria
+                {19, -714, -26, -788}, // lenina_7
+                {-611, 79, -680, 149}, // university
+                {-367, -985, -329, -937}, // alexander_passage
+                {33, -457, -34, -465}, // lenina_6
+                {145, 314, 182, 301}, // governor_house
+                {-366, -815, -328, -771}, // officers_house
+                {-364, -628, -400, -602}, // ufa_astoria
+        };
+        String[] lookNames = {"toratau", "ar_rahim", "government_house", "trade_unions", "crowne_plaza", "zemstvo", "concert_hall", "drama_theatre", "philharmonic", "first_mosque", "hotel_bashkiria", "lenina_7", "university", "alexander_passage", "lenina_6", "governor_house", "officers_house", "ufa_astoria"};
+        for (int i = 0; i < looks.length; i++) {
+            final int[] lk = looks[i];
+            BlockPos from = street(lk[0], lk[1]);
+            BlockPos at = new BlockPos(lk[2], from.getY() + 8, lk[3]);
+            view(from, at, -8);
+            step(40, "let it load", () -> { });
+            shot("40_" + lookNames[i]);
+        }
         tp(street(1500, -1200), 200, -12);
         shot("25_dorm_district");
         tp(street(700, 300), 135, -10);

@@ -46,6 +46,7 @@ public final class Story {
         if (b == null) return null;
         String role = roleOf(city, b);
         BuildingGenerator.Hints hints = new BuildingGenerator.Hints();
+        Landmarks.apply(b.osm, hints);
         if (role != null) {
             switch (role) {
                 case "bsmu_main" -> {

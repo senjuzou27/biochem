@@ -49,6 +49,10 @@ public final class BuildingGenerator {
         public boolean pilasters, mansard, noPortico;
         /** A plain facade: no balconies, loggias or coloured panels. */
         public boolean plain;
+        /** Window glass; the material of domes and how many minarets a mosque has; a broad cornice above the top storey. */
+        public BlockState glass;
+        public Block domeBlock, crown;
+        public int minarets;
         public Block roofStairs, roofSlab;
         /** Up to four lines for an information sign beside the stairs of each storey. */
         public String[][] floorSigns;
@@ -98,6 +102,7 @@ public final class BuildingGenerator {
             st.pitched = this.hints.pitched;
             st.flat = !this.hints.pitched;
         }
+        if (this.hints.glass != null) st.glass = this.hints.glass.getBlock();
         if (this.hints.plain) {
             st.balconies = false;
             st.loggias = false;
@@ -1758,9 +1763,29 @@ public final class BuildingGenerator {
         for (int y = y0 + 4 + profile.length; y < y0 + 4 + profile.length + 5; y++) set(bx, y, bz, Blocks.LIGHTNING_ROD);
     }
 
+    /** A broad cornice standing out from the top of the walls (the bronze crown of a concert hall). */
+    private void crown() {
+        if (hints.crown == null) return;
+        for (Footprint.Run run : fp.runs) {
+            Direction n = run.normal();
+            for (int[] c : run.cells())
+                for (int k = 1; k <= 2; k++) {
+                    int ox = c[0] + n.getStepX() * k, oz = c[1] + n.getStepZ() * k;
+                    if (!valid(ox, oz) || city.building(fp.ox + ox, fp.oz + oz) != 0) break;
+                    set(ox, top, oz, hints.crown);
+                    set(ox, top + 1, oz, hints.crown);
+                }
+            for (int[] c : run.cells()) {
+                set(c[0], top + 1, c[1], hints.crown);
+                set(c[0], top + 2, c[1], hints.crown);
+            }
+        }
+    }
+
     private void extras() {
         portico();
         dome();
+        crown();
         if ((st.balconies || st.loggias) && levels >= 2) {
             for (Footprint.Run run : fp.runs) {
                 if (run.length() < 6) continue;
@@ -1798,7 +1823,7 @@ public final class BuildingGenerator {
                 int r = Math.min(5, bd - 1);
                 int y0 = top + Math.min(bd, 5);
                 boolean mosque = st.use == Style.Use.MOSQUE;
-                Block drum = st.wall, dome = mosque ? Blocks.DARK_PRISMARINE : Blocks.GOLD_BLOCK;
+                Block drum = st.wall, dome = hints.domeBlock != null ? hints.domeBlock : mosque ? Blocks.DARK_PRISMARINE : Blocks.GOLD_BLOCK;
                 for (int y = y0; y < y0 + 4; y++) disc(bx, y, bz, r, drum, true);
                 int[] profile = mosque ? new int[]{r, r, r - 1, r - 2, 1} : new int[]{r, r + 1, r, r - 1, Math.max(1, r - 3), 1};
                 for (int k = 0; k < profile.length; k++) disc(bx, y0 + 4 + k, bz, Math.max(0, profile[k]), dome, false);
@@ -1810,17 +1835,25 @@ public final class BuildingGenerator {
                     set(bx - 1, ty + 1, bz, Blocks.IRON_BARS);
                     set(bx + 1, ty + 1, bz, Blocks.IRON_BARS);
                 }
-                if (mosque && !fp.runs.isEmpty()) {
-                    // a minaret at the first corner of the longest wall
-                    int[] c = fp.runs.get(0).cells().get(0);
-                    int h = top - base + 14;
+                // minarets at corners of the longest walls, well apart from each other
+                List<int[]> spots = new ArrayList<>();
+                if (mosque)
+                    for (Footprint.Run run : fp.runs)
+                        for (int[] c : new int[][]{run.cells().get(0), run.cells().get(run.length() - 1)}) {
+                            if (spots.size() >= Math.max(1, hints.minarets)) break;
+                            boolean apart = true;
+                            for (int[] o : spots) if (Math.abs(o[0] - c[0]) + Math.abs(o[1] - c[1]) < 10) apart = false;
+                            if (apart) spots.add(c);
+                        }
+                for (int[] c : spots) {
+                    int h = top - base + 14 + (hints.minarets > 1 ? 10 : 0);
                     for (int y = base + 1; y <= base + h; y++) {
                         set(c[0], y, c[1], st.wall);
                         if (y > top) for (Direction dir : Direction.Plane.HORIZONTAL)
                             if (valid(c[0] + dir.getStepX(), c[1] + dir.getStepZ()) && y < base + h - 3) set(c[0] + dir.getStepX(), y, c[1] + dir.getStepZ(), st.wall);
                     }
                     for (Direction dir : Direction.Plane.HORIZONTAL) set(c[0] + dir.getStepX() * 2, base + h - 4, c[1] + dir.getStepZ() * 2, Blocks.IRON_BARS);
-                    set(c[0], base + h + 1, c[1], Blocks.DARK_PRISMARINE);
+                    set(c[0], base + h + 1, c[1], dome);
                     set(c[0], base + h + 2, c[1], Blocks.PRISMARINE_WALL);
                     set(c[0], base + h + 3, c[1], Blocks.GOLD_BLOCK);
                 }
