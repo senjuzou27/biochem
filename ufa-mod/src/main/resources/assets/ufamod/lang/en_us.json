@@ -17,5 +17,7 @@
   "item.ufamod.camo_jacket": "Camouflage Jacket",
   "item.ufamod.camo_trousers": "Camouflage Trousers",
   "item.ufamod.army_boots": "Army Boots",
-  "item.ufamod.sapper_shovel": "Entrenching Tool"
+  "item.ufamod.sapper_shovel": "Entrenching Tool",
+  "block.ufamod.traffic_light": "Traffic light",
+  "entity.ufamod.vehicle": "Vehicle"
 }

@@ -17,5 +17,7 @@
   "item.ufamod.camo_jacket": "Камуфляжный китель",
   "item.ufamod.camo_trousers": "Камуфляжные брюки",
   "item.ufamod.army_boots": "Берцы",
-  "item.ufamod.sapper_shovel": "Сапёрная лопатка"
+  "item.ufamod.sapper_shovel": "Сапёрная лопатка",
+  "block.ufamod.traffic_light": "Светофор",
+  "entity.ufamod.vehicle": "Транспорт"
 }

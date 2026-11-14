@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 public record MapPoint(Kind kind, int x, int z, String name, @Nullable String name2, @Nullable String shop, float dx, float dz) {
     public enum Kind {
         TREE, BENCH, LAMP, BUS_STOP, SIGNALS, FOUNTAIN, STATUE, BUST, STELE, MEMORIAL, KIOSK, STREET_SIGN, WASTE, BICYCLE,
-        ARTWORK, CONIFER, BIRCH, FLOWERS;
+        ARTWORK, CONIFER, BIRCH, FLOWERS, CAR, CROSSING_SIGN;
 
         public static Kind byId(int id) {
             Kind[] v = values();
@@ -17,7 +17,7 @@ public record MapPoint(Kind kind, int x, int z, String name, @Nullable String na
         public int radius() {
             return switch (this) {
                 case TREE, CONIFER, BIRCH -> 4;
-                case BUS_STOP, FOUNTAIN, STATUE, MEMORIAL, KIOSK, ARTWORK -> 5;
+                case BUS_STOP, FOUNTAIN, STATUE, MEMORIAL, KIOSK, ARTWORK, CAR -> 5;
                 default -> 2;
             };
         }

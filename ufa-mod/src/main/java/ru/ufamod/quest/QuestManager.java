@@ -43,6 +43,7 @@ import ru.ufamod.entity.NpcRole;
 import ru.ufamod.net.Net;
 import ru.ufamod.net.OpenExamPacket;
 import ru.ufamod.registry.ModItems;
+import ru.ufamod.world.Military;
 import ru.ufamod.world.Places;
 import ru.ufamod.world.Plan;
 import ru.ufamod.world.UfaWorld;
@@ -67,7 +68,7 @@ public final class QuestManager {
 
     // ------------------------------------------------------------------ player state
 
-    private static CompoundTag data(Player player) {
+    static CompoundTag data(Player player) {
         CompoundTag root = player.getPersistentData();
         if (!root.contains(Player.PERSISTED_NBT_TAG)) root.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
         CompoundTag persisted = root.getCompound(Player.PERSISTED_NBT_TAG);
@@ -90,22 +91,22 @@ public final class QuestManager {
 
     // ------------------------------------------------------------------ messages
 
-    private static void say(ServerPlayer player, String who, String text) {
+    static void say(ServerPlayer player, String who, String text) {
         player.sendSystemMessage(Component.literal(who + ": ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(text).withStyle(ChatFormatting.WHITE)));
     }
 
-    private static void narrate(ServerPlayer player, String text) {
+    static void narrate(ServerPlayer player, String text) {
         player.sendSystemMessage(Component.literal(text).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
     }
 
-    private static void title(ServerPlayer player, String title, String subtitle, ChatFormatting color) {
+    static void title(ServerPlayer player, String title, String subtitle, ChatFormatting color) {
         player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 80, 20));
         player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(subtitle)));
         player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title).withStyle(color, ChatFormatting.BOLD)));
     }
 
-    private static MutableComponent button(String label, String command, ChatFormatting color) {
+    static MutableComponent button(String label, String command, ChatFormatting color) {
         return Component.literal("[" + label + "]").withStyle(s -> s.withColor(color).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command)));
     }
@@ -125,28 +126,29 @@ public final class QuestManager {
             case WAKE -> new Objective("07:00 · Возьми из шкафа (сундук в комнате) халат и зачётку", P.wardrobe);
             case BREAKFAST -> new Objective("07:15 · Позавтракай: еда в холодильнике — втором сундуке у двери", P.fridge);
             case TO_BSMU -> dist(player, P.bsmuDoor) > 500
-                    ? new Objective("07:40 · На пары: сядь в маршрутку у входа в общежитие", P.busFrom)
-                    : new Objective("08:10 · Главный корпус БГМУ, ул. Ленина, 3", P.bsmuDoor);
+                    ? new Objective("07:40 · На пары: сядь в автобус у входа в общежитие (поговори с водителем)", P.busFrom)
+                    : new Objective("08:10 · Корпус №7 БГМУ: ул. Пушкина, 96/98 (остановка «Дом актёра»)", P.bsmuDoor);
             case WATCHMAN -> new Objective("08:20 · Надень халат и покажись охраннику на вахте", P.guard);
-            case LECTURE -> new Objective("08:30 · Лекция по биохимии: большая аудитория в центре корпуса", P.lecture);
+            case LECTURE -> new Objective("08:30 · Биохимия: кафедра на 2 этаже, левое крыло (от входа по лестнице)", P.lecture);
             case LECTURE_RUNNING -> new Objective("08:30 · Слушай лекцию…", null);
-            case TO_EXAM -> new Objective("11:00 · Экзамен: кафедра анатомии, корпус №2 (Заки Валиди, 47). Атлас — в Нацбиблиотеке напротив", P.exam);
+            case TO_EXAM -> new Objective("11:00 · Экзамен: кафедра анатомии, корпус №4 (Заки Валиди, 47). Атлас — в Нацбиблиотеке на Ленина, 4", P.exam);
             case EXAM_RUNNING -> new Objective("11:00 · Отвечай на билет", null);
             case PASSED -> dist(player, P.salavat) > 500
-                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: маршрутка у главного корпуса", P.busTo)
+                    ? new Objective("Сдал! К памятнику Салавату Юлаеву: автобус у корпуса №7 на Пушкина", P.busTo)
                     : new Objective("Сдал! Отпразднуй у памятника Салавату Юлаеву", P.salavat);
             case FAILED -> new Objective("Неуд… Выйди на улицу", P.examOut);
             case ARREST -> new Objective("…", null);
             case CAMP_REPORT -> new Objective("Учебный центр · Доложи сержанту на плацу", Plan.CAMP_SERGEANT);
             case CAMP_COURSE -> new Objective("Пробеги полосу препятствий до финиша", Plan.CAMP_COURSE_END);
-            case CAMP_RANGE -> new Objective("Стрельбище: попади в мишени из лука (" + count + "/" + RANGE_HITS + ")", Plan.CAMP_RANGE);
+            case CAMP_RANGE -> new Objective("Стрельбище: попади в мишени (" + count + "/" + RANGE_HITS + ")", Plan.CAMP_RANGE);
             case CAMP_TRENCH -> new Objective("Окопы: выкопай землю лопаткой (" + count + "/" + TRENCH_BLOCKS + ")", Plan.CAMP_TRENCH);
             case CAMP_TRUCK -> new Objective("Погрузка: поднимись в кузов «Урала»", Plan.CAMP_TRUCK);
+            case FRONT_ARRIVE, FRONT_HOLD, FRONT_MEDEVAC, FRONT_WOUNDED -> new Objective(Front.objective(player, stage(player)), Front.target(player, stage(player)));
             default -> null;
         };
     }
 
-    private static void updateBar(ServerPlayer player) {
+    static void updateBar(ServerPlayer player) {
         Objective o = objective(player);
         ServerBossEvent bar = BARS.get(player.getUUID());
         if (o == null) {
@@ -227,9 +229,9 @@ public final class QuestManager {
         setStage(player, Stage.FREE);
         player.setGameMode(GameType.CREATIVE);
         player.removeAllEffects();
-        if (player.level().dimension() != UfaWorld.UFA || player.getX() > 3500) teleport(player, Places.get().bsmuDoor);
+        if (player.level().dimension() != UfaWorld.UFA || player.getX() > 3500) teleport(player, Places.get().mainDoor);
         narrate(player, "Свободная прогулка по Уфе. Режим — творческий. Вернуться к сюжету: /ufa restart");
-        narrate(player, "Быстрые перемещения: /ufa tp bsmu | dorm | anatomy | library | gostiny | opera | park | salavat | friendship | camp");
+        narrate(player, "Быстрые перемещения: /ufa tp bsmu | k7 | dorm | anatomy | library | gostiny | opera | park | salavat | friendship | camp");
     }
 
     public static void leave(ServerPlayer player) {
@@ -266,7 +268,10 @@ public final class QuestManager {
 
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) updateBar(player);
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        Stage s = stage(player);
+        if (s == Stage.FRONT_ARRIVE || s == Stage.FRONT_HOLD || s == Stage.FRONT_MEDEVAC) Front.onRespawn(player);
+        updateBar(player);
     }
 
     @SubscribeEvent
@@ -274,8 +279,8 @@ public final class QuestManager {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (stage(player) == Stage.BREAKFAST && event.getItem().isEdible()) {
             setStage(player, Stage.TO_BSMU);
-            narrate(player, "Теперь на пары. До главного корпуса на Ленина, 3 почти два километра через центр.");
-            narrate(player, "У входа в общежитие стоит маршрутка — поговори с водителем. Или иди пешком, если не боишься опоздать.");
+            narrate(player, "Теперь на пары. Биохимия — в корпусе №7 на Пушкина, 96/98; до него почти два километра через центр.");
+            narrate(player, "У входа в общежитие ждёт автобус — поговори с водителем. Или иди пешком, если не боишься опоздать.");
         }
     }
 
@@ -284,15 +289,7 @@ public final class QuestManager {
         if (!(event.getProjectile() instanceof AbstractArrow arrow) || !(arrow.getOwner() instanceof ServerPlayer player)) return;
         if (stage(player) != Stage.CAMP_RANGE || !(event.getRayTraceResult() instanceof BlockHitResult hit)) return;
         if (!player.level().getBlockState(hit.getBlockPos()).is(Blocks.TARGET)) return;
-        CompoundTag d = data(player);
-        int count = d.getInt("count") + 1;
-        d.putInt("count", count);
-        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.7f, 1.0f);
-        if (count >= RANGE_HITS) {
-            setStage(player, Stage.CAMP_TRENCH);
-            player.getInventory().add(Loot.sapperShovel());
-            say(player, "Сержант Громов", "Сойдёт. Теперь инженерная подготовка. Лопатку в руки — и копать окоп. Двенадцать блоков!");
-        } else updateBar(player);
+        rangeHit(player);
     }
 
     @SubscribeEvent
@@ -332,7 +329,7 @@ public final class QuestManager {
                 Places P = Places.get();
                 if (timer % 10 == 0 && (dist(player, P.bsmuDoor) < 14 || P.insideBuilding(player.getX(), player.getZ(), P.bsmuIndex))) {
                     setStage(player, Stage.WATCHMAN);
-                    narrate(player, "Главный корпус БГМУ. Построен в 1930-е, во время войны здесь работал эвакуированный 1-й Московский мединститут.");
+                    narrate(player, "Корпус №7 БГМУ на Пушкина, 96/98: шесть этажей с мансардой, сдан в 1978–1980 годах. Здесь кафедры биохимии, химии, физики, фармакологии и научная библиотека.");
                     narrate(player, "На вахте пропускной режим: без халата не пустят.");
                 }
             }
@@ -346,16 +343,18 @@ public final class QuestManager {
                 if (timer % 10 == 0 && P.outdoors(player.getX(), player.getZ()) && dist(player, P.examOut) < 60) beginArrest(player);
             }
             case ARREST -> arrest(player, timer);
+            case FRONT_HOLD, FRONT_MEDEVAC, FRONT_WOUNDED -> Front.tick(player, stage, timer);
             case CAMP_COURSE -> {
                 if (timer % 5 == 0 && Plan.CAMP_COURSE_FINISH.contains(player.position())) {
                     setStage(player, Stage.CAMP_RANGE);
-                    player.getInventory().add(new ItemStack(Items.BOW));
-                    player.getInventory().add(new ItemStack(Items.ARROW, 48));
-                    say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Автоматов на всех не хватило — держи лук. Пять попаданий в мишени!");
+                    if (giveRangeKit(player))
+                        say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Получи автомат АК-74М и три магазина. Огонь одиночными, пять попаданий в мишени!");
+                    else
+                        say(player, "Сержант Громов", "Живой? Тогда на стрельбище. Автоматов на всех не хватило — держи лук. Пять попаданий в мишени!");
                 }
             }
             case CAMP_TRUCK -> {
-                if (timer % 5 == 0 && Plan.CAMP_TRUCK_BOX.contains(player.position())) badEnding(player);
+                if (timer % 5 == 0 && Plan.CAMP_TRUCK_BOX.contains(player.position())) Front.start(player);
             }
             case END_SVO -> {
                 if (timer % 60 == 0) player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0, false, false));
@@ -392,13 +391,14 @@ public final class QuestManager {
             "Говорят, Латыпов сегодня злой. Половину потока уже отправил на пересдачу.",
             "Mandibula — нижняя, maxilla — верхняя. Mandibula — нижняя, maxilla — верхняя…",
             "Если завалю — отчислят. А там сам знаешь: отсрочка сгорает, и здравствуй, военкомат.",
-            "В Национальной библиотеке напротив главного корпуса атлас лежит на пюпитре. Сходи, повтори.",
+            "В Национальной библиотеке на Ленина, 4 — напротив корпуса №1 — атлас лежит на пюпитре. Сходи, повтори.",
             "После экзамена — в столовую за эчпочмаком. Если выживем."
     };
 
     public static void onTalk(ServerPlayer player, NpcEntity npc) {
         Stage stage = stage(player);
         String name = npc.hasCustomName() ? npc.getCustomName().getString() : "Прохожий";
+        if (Front.onTalk(player, npc, stage, name)) return;
         switch (npc.getRole()) {
             case ROOMMATE -> say(player, name, stage == Stage.WAKE ? "Шкаф у окна. Халат, зачётка, атлас — и бегом."
                     : stage == Stage.BREAKFAST ? "Поешь нормально. В холодильнике у двери эчпочмаки, мама из Сибая передала."
@@ -410,7 +410,7 @@ public final class QuestManager {
                 } else if (stage == Stage.WATCHMAN) {
                     if (wearsCoat(player)) {
                         setStage(player, Stage.LECTURE);
-                        say(player, name, "Халат вижу, проходи. Лекция в большой аудитории, прямо по коридору, в середине корпуса.");
+                        say(player, name, "Халат вижу, проходи. Биохимия — второй этаж, левое крыло. По лестнице и налево, там табличка.");
                     } else if (has(player, ModItems.LAB_COAT.get())) {
                         say(player, name, "А халат почему в сумке? Надевай — тогда пущу. Порядок есть порядок.");
                     } else {
@@ -474,20 +474,25 @@ public final class QuestManager {
         boolean atDorm = npc.distanceToSqr(P.busFrom.getX() + 0.5, npc.getY(), P.busFrom.getZ() + 0.5) < 40 * 40;
         BlockPos dest;
         if (atDorm) {
-            dest = P.busTo;
+            dest = P.bsmuDoor;
             say(player, name, "До Медуниверситета? Садись. Передаём за проезд!");
-            narrate(player, "Маршрутка летит по Мингажева и Коммунистической, сворачивает на Ленина. Десять минут — и ты у главного корпуса.");
+            narrate(player, "Автобус идёт от Мингажева через центр до остановки «Дом актёра» — она прямо у корпуса №7.");
         } else if (stage == Stage.PASSED) {
             dest = P.salavat;
             say(player, name, "К Салавату? Сдал, значит! Поехали, довезу до самой площадки.");
             narrate(player, "По Заки Валиди, мимо Телецентра — к обрыву над Белой.");
         } else {
-            dest = P.busFrom;
+            dest = P.dormOut;
             say(player, name, "До общежития на Мингажева? Поехали.");
         }
-        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
-        teleport(player, dest);
         player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 0.7f, 1.2f);
+        if (ru.ufamod.traffic.TrafficManager.ride(player, dest)) {
+            narrate(player, "Автобус едет по улицам города. Выйти раньше — клавиша приседания (Shift).");
+        } else {
+            // no way by road: the old instant ride
+            player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
+            teleport(player, dest);
+        }
     }
 
     // ------------------------------------------------------------------ lecture
@@ -498,7 +503,7 @@ public final class QuestManager {
             "Ключевой фермент — фосфофруктокиназа. Его тормозит избыток АТФ: клетка не тратит глюкозу зря.",
             "Без кислорода пируват превращается в лактат. Бактерии зубного налёта делают то же самое —",
             "и получившаяся кислота растворяет эмаль. Так биохимия объясняет кариес. Стоматологам — знать!",
-            "На сегодня всё. У кого экзамен по анатомии — кафедра во втором корпусе, на Заки Валиди, 47. Удачи."
+            "На сегодня всё. У кого экзамен по анатомии — кафедра в четвёртом корпусе, на Заки Валиди, 47. Удачи."
     };
 
     private static void lecture(ServerPlayer player, int timer) {
@@ -508,8 +513,8 @@ public final class QuestManager {
         else {
             data(player).putBoolean("lecture", true);
             setStage(player, Stage.TO_EXAM);
-            narrate(player, "Кафедра анатомии — во флигеле бывшей мужской гимназии (корпус №2), сразу за главным корпусом.");
-            narrate(player, "До экзамена есть время: в Национальной библиотеке через улицу лежит атлас, в столовой БГМУ во дворе кормят.");
+            narrate(player, "Кафедра анатомии — в корпусе №4 на Заки Валиди, 47: через двор университетского городка, мимо столовой, к южной стороне квартала.");
+            narrate(player, "До экзамена есть время: в Национальной библиотеке на Ленина, 4 лежит атлас, в столовой БГМУ во дворе кормят. По пути — корпус №1 с колоннами на аллее улицы Ленина.");
         }
     }
 
@@ -629,14 +634,16 @@ public final class QuestManager {
         if (ufa == null) return;
         player.getInventory().clearContent();
         player.removeAllEffects();
-        player.setItemSlot(EquipmentSlot.HEAD, new ItemStack(ModItems.CAMO_HELMET.get()));
-        player.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.CAMO_JACKET.get()));
+        ItemStack helmet = Military.helmet(), vest = Military.vest();
+        player.setItemSlot(EquipmentSlot.HEAD, helmet != null ? helmet : new ItemStack(ModItems.CAMO_HELMET.get()));
+        player.setItemSlot(EquipmentSlot.CHEST, vest != null ? vest : new ItemStack(ModItems.CAMO_JACKET.get()));
         player.setItemSlot(EquipmentSlot.LEGS, new ItemStack(ModItems.CAMO_TROUSERS.get()));
         player.setItemSlot(EquipmentSlot.FEET, new ItemStack(ModItems.ARMY_BOOTS.get()));
         player.getInventory().add(new ItemStack(ModItems.SUMMONS.get()));
         player.getInventory().add(new ItemStack(Items.BREAD, 6));
         Vec3 p = Plan.CAMP_ARRIVE;
         player.teleportTo(ufa, p.x, p.y, p.z, -90f, 0f);
+        Military.setUpCamp(ufa);
         player.setRespawnPosition(UfaWorld.UFA, BlockPos.containing(p), -90f, true, false);
         player.server.overworld().setDayTime(23500);
         setStage(player, Stage.CAMP_REPORT);
@@ -644,17 +651,42 @@ public final class QuestManager {
         say(player, "Сержант Громов", "Новенький! Ко мне, на плац!");
     }
 
-    private static void badEnding(ServerPlayer player) {
-        setStage(player, Stage.END_SVO);
-        player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0, false, false));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100000, 10, false, false));
-        player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 1f, 0.6f);
-        title(player, "Тебя отправили на СВО", "Конец. Надо было учить анатомию.", ChatFormatting.DARK_RED);
-        narrate(player, "Брезент опускается. «Урал» трогается и выезжает за ворота.");
-        narrate(player, "В кармане — повестка и зачётка с единственной записью: «анатомия — неуд.»");
-        player.sendSystemMessage(Component.literal("Плохой финал. ").withStyle(ChatFormatting.RED)
-                .append(button("Прожить день заново", "/ufa restart", ChatFormatting.YELLOW))
-                .append(" ").append(button("Гулять по Уфе", "/ufa free", ChatFormatting.GREEN)));
+    /** The rifle and its rounds with the gun mod, a bow without it; true for the rifle. */
+    static boolean giveRangeKit(ServerPlayer player) {
+        ItemStack rifle = Military.rifle(), ammo = Military.ammo(90);
+        if (rifle != null && ammo != null) {
+            player.getInventory().add(rifle);
+            player.getInventory().add(ammo);
+            return true;
+        }
+        player.getInventory().add(new ItemStack(Items.BOW));
+        player.getInventory().add(new ItemStack(Items.ARROW, 48));
+        return false;
+    }
+
+    /** A hit on a target dummy of Superb Warfare counts on the range like an arrow in a target block. */
+    @SubscribeEvent
+    public static void onTargetHurt(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (!(event.getSource().getEntity() instanceof ServerPlayer player) || stage(player) != Stage.CAMP_RANGE) return;
+        if (!Military.isTarget(event.getEntity())) return;
+        if (event.getSource().getDirectEntity() == player) return;   // a punch is not a shot
+        CompoundTag d = data(player);
+        long now = player.level().getGameTime();
+        if (now - d.getLong("lastHit") < 6) return;   // one count per shot, not per pellet or tick
+        d.putLong("lastHit", now);
+        rangeHit(player);
+    }
+
+    private static void rangeHit(ServerPlayer player) {
+        CompoundTag d = data(player);
+        int count = d.getInt("count") + 1;
+        d.putInt("count", count);
+        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.7f, 1.0f);
+        if (count >= RANGE_HITS) {
+            setStage(player, Stage.CAMP_TRENCH);
+            player.getInventory().add(Loot.sapperShovel());
+            say(player, "Сержант Громов", "Сойдёт. Теперь инженерная подготовка. Лопатку в руки — и копать окоп. Двенадцать блоков!");
+        } else updateBar(player);
     }
 
     // ------------------------------------------------------------------ dev / command helpers
@@ -664,11 +696,12 @@ public final class QuestManager {
             arriveAtCamp(player);
             return;
         }
-        if (stage == Stage.CAMP_RANGE) {
-            player.getInventory().add(new ItemStack(Items.BOW));
-            player.getInventory().add(new ItemStack(Items.ARROW, 48));
-        }
+        if (stage == Stage.CAMP_RANGE) giveRangeKit(player);
         if (stage == Stage.CAMP_TRENCH) player.getInventory().add(Loot.sapperShovel());
+        if (stage == Stage.FRONT_ARRIVE) {
+            Front.start(player);
+            return;
+        }
         setStage(player, stage);
     }
 }

@@ -1,0 +1,16 @@
+{
+ "variants": {
+  "state=0": {
+   "model": "ufamod:block/traffic_light_0"
+  },
+  "state=1": {
+   "model": "ufamod:block/traffic_light_1"
+  },
+  "state=2": {
+   "model": "ufamod:block/traffic_light_2"
+  },
+  "state=3": {
+   "model": "ufamod:block/traffic_light_3"
+  }
+ }
+}

@@ -26,10 +26,13 @@ public class UfaMod {
         IEventBus bus = context.getModEventBus();
         ModItems.ITEMS.register(bus);
         ModItems.TABS.register(bus);
+        ru.ufamod.registry.ModBlocks.BLOCKS.register(bus);
         ModEntities.ENTITIES.register(bus);
         UfaWorld.GENERATORS.register(bus);
         Net.register();
+        MinecraftForge.EVENT_BUS.register(new ru.ufamod.traffic.TrafficManager());
         if (DevHooks.ENABLED) MinecraftForge.EVENT_BUS.register(new DevHooks());
+        if (ru.ufamod.dev.RegistryDump.FILE != null) MinecraftForge.EVENT_BUS.register(new ru.ufamod.dev.RegistryDump());
         if (AutoTest.ENABLED) {
             MinecraftForge.EVENT_BUS.register(new AutoTest());
             DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> MinecraftForge.EVENT_BUS.register(new AutoTestClient()));

@@ -19,6 +19,10 @@ public enum Stage {
     CAMP_RANGE,      // shooting range
     CAMP_TRENCH,     // dig a trench
     CAMP_TRUCK,      // board the truck
+    FRONT_ARRIVE,    // the dugout: report to the platoon commander
+    FRONT_HOLD,      // hold the trench against three waves
+    FRONT_MEDEVAC,   // bring the wounded comrade back to the medic
+    FRONT_WOUNDED,   // the shell that ends it
     END_SVO,         // bad ending
     FREE;            // good ending / free roam
 

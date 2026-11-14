@@ -30,6 +30,7 @@ public final class Stamps {
                     a.add(salavat(city));
                     a.add(friendship(city));
                     a.add(fromCanvas(CampBuilder.buildCamp()));
+                    a.add(fromCanvas(FrontBuilder.buildFront()));
                     all = a;
                 }
             }

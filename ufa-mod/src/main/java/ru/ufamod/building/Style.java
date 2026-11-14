@@ -26,7 +26,7 @@ public final class Style {
     public boolean logWalls;
 
     private static final Block[] PLASTER = {Blocks.YELLOW_TERRACOTTA, Blocks.WHITE_TERRACOTTA, Blocks.PINK_TERRACOTTA,
-            Blocks.LIGHT_BLUE_TERRACOTTA, Blocks.SMOOTH_SANDSTONE, Blocks.ORANGE_TERRACOTTA, Blocks.LIGHT_GRAY_TERRACOTTA};
+            Blocks.END_STONE_BRICKS, Blocks.SMOOTH_SANDSTONE, Blocks.ORANGE_TERRACOTTA, Blocks.SANDSTONE};
     private static final Block[] OLD_ROOF = {Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DARK_PRISMARINE_STAIRS, Blocks.WAXED_WEATHERED_CUT_COPPER_STAIRS,
             Blocks.WAXED_EXPOSED_CUT_COPPER_STAIRS, Blocks.MUD_BRICK_STAIRS};
     private static final Block[] OLD_ROOF_FULL = {Blocks.DEEPSLATE_TILES, Blocks.DARK_PRISMARINE, Blocks.WAXED_WEATHERED_CUT_COPPER,
@@ -97,9 +97,14 @@ public final class Style {
     }
 
     public static Style of(BuildingInfo b, Random r) {
+        return of(b, r, null, 0);
+    }
+
+    /** @param forcedEra overrides the guessed era, @param forcedLevels overrides the number of storeys when positive */
+    public static Style of(BuildingInfo b, Random r, Era forcedEra, int forcedLevels) {
         Style s = new Style();
         s.use = useOf(b);
-        s.levels = Math.max(1, Math.min(30, estimateLevels(b, s.use)));
+        s.levels = Math.max(1, Math.min(30, forcedLevels > 0 ? forcedLevels : estimateLevels(b, s.use)));
         String mat = b.material;
         int lv = s.levels;
         if (s.use == Use.CHURCH || s.use == Use.MOSQUE) s.era = Era.RELIGIOUS;
@@ -112,6 +117,7 @@ public final class Style {
         else if (lv <= 8) s.era = Era.STALIN;
         else s.era = Era.PANEL;
         if (s.use == Use.THEATRE || s.use == Use.LIBRARY || s.use == Use.MUSEUM) s.era = lv >= 6 ? Era.MODERN : Era.STALIN;
+        if (forcedEra != null) s.era = forcedEra;
 
         s.floor = Blocks.SPRUCE_PLANKS;
         s.partition = Blocks.WHITE_TERRACOTTA;
@@ -156,7 +162,7 @@ public final class Style {
                 s.quoins = true;
             }
             case STALIN -> {
-                Block[] w = {Blocks.SMOOTH_SANDSTONE, Blocks.YELLOW_TERRACOTTA, Blocks.WHITE_TERRACOTTA, Blocks.PINK_TERRACOTTA, Blocks.LIGHT_GRAY_TERRACOTTA};
+                Block[] w = {Blocks.SMOOTH_SANDSTONE, Blocks.YELLOW_TERRACOTTA, Blocks.WHITE_TERRACOTTA, Blocks.PINK_TERRACOTTA, Blocks.END_STONE_BRICKS, Blocks.SANDSTONE};
                 s.wall = w[r.nextInt(w.length)];
                 s.trim = Blocks.SMOOTH_QUARTZ;
                 s.plinth = r.nextBoolean() ? Blocks.POLISHED_GRANITE : Blocks.STONE_BRICKS;
@@ -172,7 +178,7 @@ public final class Style {
             case KHRUSHCHEV -> {
                 Block[] w = {Blocks.BRICKS, Blocks.SMOOTH_SANDSTONE, Blocks.WHITE_TERRACOTTA, Blocks.BRICKS};
                 s.wall = w[r.nextInt(w.length)];
-                s.trim = s.wall == Blocks.BRICKS ? Blocks.SMOOTH_STONE : Blocks.LIGHT_GRAY_TERRACOTTA;
+                s.trim = s.wall == Blocks.BRICKS ? Blocks.SMOOTH_STONE : Blocks.SMOOTH_QUARTZ;
                 s.groundHeight = s.storeyHeight = 3;
                 s.period = 3;
                 s.windowAt = new boolean[]{false, true, true};
@@ -207,7 +213,7 @@ public final class Style {
                 s.door = Blocks.IRON_DOOR;
             }
             case INDUSTRIAL -> {
-                Block[] w = {Blocks.LIGHT_GRAY_TERRACOTTA, Blocks.GRAY_CONCRETE, Blocks.ANDESITE, Blocks.BRICKS, Blocks.WHITE_TERRACOTTA};
+                Block[] w = {Blocks.LIGHT_GRAY_CONCRETE, Blocks.GRAY_CONCRETE, Blocks.ANDESITE, Blocks.BRICKS, Blocks.WHITE_TERRACOTTA};
                 s.wall = w[r.nextInt(w.length)];
                 s.trim = Blocks.SMOOTH_STONE;
                 s.groundHeight = s.storeyHeight = 4;
