@@ -254,7 +254,48 @@ public final class AutoTest {
         });
         expect(Stage.CAMP_TRUCK);
         tp(cx + 16.5, cy + 2, cz + 124.5, 90, 0);
-        step(30, "wait", () -> { });
+        step(60, "ride to the front", () -> { });
+        expect(Stage.FRONT_ARRIVE);
+        double fx = Plan.FRONT_OX, fz = Plan.FRONT_OZ;
+        int fy = Plan.BASE_Y;
+        step(10, "keep the test player alive", () -> player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 20 * 60 * 10, 4, false, false)));
+        step(60, "look around the dugout", () -> { });
+        tp(fx + 49.5, fy - 2, fz + 80.5, 90, 8);
+        shot("13d_front_dugout");
+        talk(NpcRole.COMMANDER);
+        expect(Stage.FRONT_HOLD);
+        // the firing step at a loophole
+        tp(fx + 61.5, fy, fz + 81.5, -90, 2);
+        step(10, "weapon in hand", () -> {
+            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+                ItemStack it = player.getInventory().getItem(i);
+                if (it.is(net.minecraft.world.item.Items.BOW) || it.getItem().builtInRegistryHolder().key().location().toString().equals("tacz:modern_kinetic_gun")) {
+                    player.getInventory().setItem(i, ItemStack.EMPTY);
+                    player.setItemInHand(InteractionHand.MAIN_HAND, it);
+                    break;
+                }
+            }
+        });
+        step(260, "the first attack comes", () -> { });
+        shot("13e_front_attack");
+        for (int i = 0; i < 14; i++) {
+            step(80, "fight", () -> {
+                for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))
+                    e.hurt(player.damageSources().playerAttack(player), 100f);
+            });
+        }
+        expect(Stage.FRONT_MEDEVAC);
+        tp(fx + 83.5, fy, fz + 40.5, -90, 25);
+        step(20, "find the comrade", () -> { });
+        shot("13f_front_wounded");
+        talk(NpcRole.WOUNDED);
+        tp(fx + 43.5, fy - 2, fz + 85.5, 90, 0);
+        step(40, "carry him in", () -> { });
+        expect(Stage.FRONT_WOUNDED);
+        step(140, "the shell", () -> { });
+        shot("13g_front_wounded");
+        step(320, "the end", () -> { });
         expect(Stage.END_SVO);
 
         // ---- second run: the good ending

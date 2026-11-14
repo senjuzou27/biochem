@@ -343,6 +343,9 @@ def main():
         "soldier_0": skin(14, SKIN_TONES[0], brown, (0, 0, 0), (0, 0, 0), camo=True, hat=("helmet", (74, 84, 54)), shoes=(24, 22, 20)),
         "sergeant_0": skin(15, SKIN_TONES[3], black, (0, 0, 0), (0, 0, 0), camo=True, hat=("cap", (58, 66, 44)), beard=(40, 34, 30), shoes=(24, 22, 20)),
         "recruit_0": skin(16, SKIN_TONES[2], brown, (0, 0, 0), (0, 0, 0), camo=True, shoes=(24, 22, 20)),
+        "enemy_0": skin(18, SKIN_TONES[1], black, (0, 0, 0), (0, 0, 0), camo=True, hat=("helmet", (58, 62, 58)), scarf=(46, 48, 44), shoes=(20, 20, 20)),
+        "enemy_1": skin(19, SKIN_TONES[0], brown, (0, 0, 0), (0, 0, 0), camo=True, hat=("helmet", (70, 72, 66)), scarf=(54, 56, 50), shoes=(20, 20, 20)),
+        "medic_0": skin(20, SKIN_TONES[2], brown, (0, 0, 0), (0, 0, 0), camo=True, long_hair=True, hat=("cap", (228, 228, 228)), shoes=(24, 22, 20)),
     }
     for name, img in npc.items():
         save(img, "entity", "npc", name + ".png")

@@ -23,6 +23,19 @@ public final class Plan {
     public static final BlockPos CAMP_TRUCK = new BlockPos(CAMP_OX + 11, BASE_Y + 1, CAMP_OZ + 124);
     public static final AABB CAMP_TRUCK_BOX = campBox(14, 3, 122, 19, 6, 126);
 
+    // ---- the front line of the bad ending: an invented place, far away from the camp
+    public static final int FRONT_OX = 8000, FRONT_OZ = 0, FRONT_W = 176, FRONT_D = 160;
+    /** Inside the dugout; its floor is three blocks below the ground. */
+    public static final Vec3 FRONT_ARRIVE = new Vec3(FRONT_OX + 46.5, BASE_Y - 2, FRONT_OZ + 80.5);
+    public static final BlockPos FRONT_COMMANDER = new BlockPos(FRONT_OX + 41, BASE_Y - 2, FRONT_OZ + 76);
+    public static final BlockPos FRONT_MEDIC = new BlockPos(FRONT_OX + 41, BASE_Y - 2, FRONT_OZ + 85);
+    public static final BlockPos FRONT_TRENCH = new BlockPos(FRONT_OX + 59, BASE_Y - 1, FRONT_OZ + 80);
+    public static final BlockPos FRONT_OP = new BlockPos(FRONT_OX + 86, BASE_Y, FRONT_OZ + 40);
+    public static final AABB FRONT_BOX = new AABB(FRONT_OX, BASE_Y - 8, FRONT_OZ, FRONT_OX + FRONT_W, BASE_Y + 40, FRONT_OZ + FRONT_D);
+    /** Where the enemy comes out of the tree line, and the craters it advances to (local x, z). */
+    public static final int FRONT_ENEMY_X = 150;
+    public static final int[][] FRONT_COVER = {{98, 34}, {104, 50}, {97, 62}, {110, 74}, {100, 88}, {108, 100}, {96, 112}, {112, 124}, {118, 56}, {118, 92}};
+
     private static AABB campBox(int x1, int y1, int z1, int x2, int y2, int z2) {
         return new AABB(CAMP_OX + x1, BASE_Y + y1, CAMP_OZ + z1, CAMP_OX + x2 + 1, BASE_Y + y2 + 1, CAMP_OZ + z2 + 1);
     }

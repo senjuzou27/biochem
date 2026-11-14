@@ -14,7 +14,12 @@ public enum NpcRole {
     SOLDIER("soldier", 1),
     SERGEANT("sergeant", 1),
     RECRUIT("recruit", 1),
-    DRIVER("citizen", 4);
+    DRIVER("citizen", 4),
+    // the front line of the bad ending
+    ENEMY("enemy", 2),
+    COMMANDER("sergeant", 1),
+    MEDIC("medic", 1),
+    WOUNDED("recruit", 1);
 
     public final String skin;
     public final int variants;

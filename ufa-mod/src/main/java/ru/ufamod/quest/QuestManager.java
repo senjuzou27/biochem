@@ -68,7 +68,7 @@ public final class QuestManager {
 
     // ------------------------------------------------------------------ player state
 
-    private static CompoundTag data(Player player) {
+    static CompoundTag data(Player player) {
         CompoundTag root = player.getPersistentData();
         if (!root.contains(Player.PERSISTED_NBT_TAG)) root.put(Player.PERSISTED_NBT_TAG, new CompoundTag());
         CompoundTag persisted = root.getCompound(Player.PERSISTED_NBT_TAG);
@@ -91,22 +91,22 @@ public final class QuestManager {
 
     // ------------------------------------------------------------------ messages
 
-    private static void say(ServerPlayer player, String who, String text) {
+    static void say(ServerPlayer player, String who, String text) {
         player.sendSystemMessage(Component.literal(who + ": ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(text).withStyle(ChatFormatting.WHITE)));
     }
 
-    private static void narrate(ServerPlayer player, String text) {
+    static void narrate(ServerPlayer player, String text) {
         player.sendSystemMessage(Component.literal(text).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
     }
 
-    private static void title(ServerPlayer player, String title, String subtitle, ChatFormatting color) {
+    static void title(ServerPlayer player, String title, String subtitle, ChatFormatting color) {
         player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 80, 20));
         player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal(subtitle)));
         player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(title).withStyle(color, ChatFormatting.BOLD)));
     }
 
-    private static MutableComponent button(String label, String command, ChatFormatting color) {
+    static MutableComponent button(String label, String command, ChatFormatting color) {
         return Component.literal("[" + label + "]").withStyle(s -> s.withColor(color).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, command)));
     }
@@ -143,11 +143,12 @@ public final class QuestManager {
             case CAMP_RANGE -> new Objective("Стрельбище: попади в мишени (" + count + "/" + RANGE_HITS + ")", Plan.CAMP_RANGE);
             case CAMP_TRENCH -> new Objective("Окопы: выкопай землю лопаткой (" + count + "/" + TRENCH_BLOCKS + ")", Plan.CAMP_TRENCH);
             case CAMP_TRUCK -> new Objective("Погрузка: поднимись в кузов «Урала»", Plan.CAMP_TRUCK);
+            case FRONT_ARRIVE, FRONT_HOLD, FRONT_MEDEVAC, FRONT_WOUNDED -> new Objective(Front.objective(player, stage(player)), Front.target(player, stage(player)));
             default -> null;
         };
     }
 
-    private static void updateBar(ServerPlayer player) {
+    static void updateBar(ServerPlayer player) {
         Objective o = objective(player);
         ServerBossEvent bar = BARS.get(player.getUUID());
         if (o == null) {
@@ -267,7 +268,10 @@ public final class QuestManager {
 
     @SubscribeEvent
     public static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) updateBar(player);
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        Stage s = stage(player);
+        if (s == Stage.FRONT_ARRIVE || s == Stage.FRONT_HOLD || s == Stage.FRONT_MEDEVAC) Front.onRespawn(player);
+        updateBar(player);
     }
 
     @SubscribeEvent
@@ -339,6 +343,7 @@ public final class QuestManager {
                 if (timer % 10 == 0 && P.outdoors(player.getX(), player.getZ()) && dist(player, P.examOut) < 60) beginArrest(player);
             }
             case ARREST -> arrest(player, timer);
+            case FRONT_HOLD, FRONT_MEDEVAC, FRONT_WOUNDED -> Front.tick(player, stage, timer);
             case CAMP_COURSE -> {
                 if (timer % 5 == 0 && Plan.CAMP_COURSE_FINISH.contains(player.position())) {
                     setStage(player, Stage.CAMP_RANGE);
@@ -349,7 +354,7 @@ public final class QuestManager {
                 }
             }
             case CAMP_TRUCK -> {
-                if (timer % 5 == 0 && Plan.CAMP_TRUCK_BOX.contains(player.position())) badEnding(player);
+                if (timer % 5 == 0 && Plan.CAMP_TRUCK_BOX.contains(player.position())) Front.start(player);
             }
             case END_SVO -> {
                 if (timer % 60 == 0) player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0, false, false));
@@ -393,6 +398,7 @@ public final class QuestManager {
     public static void onTalk(ServerPlayer player, NpcEntity npc) {
         Stage stage = stage(player);
         String name = npc.hasCustomName() ? npc.getCustomName().getString() : "Прохожий";
+        if (Front.onTalk(player, npc, stage, name)) return;
         switch (npc.getRole()) {
             case ROOMMATE -> say(player, name, stage == Stage.WAKE ? "Шкаф у окна. Халат, зачётка, атлас — и бегом."
                     : stage == Stage.BREAKFAST ? "Поешь нормально. В холодильнике у двери эчпочмаки, мама из Сибая передала."
@@ -646,7 +652,7 @@ public final class QuestManager {
     }
 
     /** The rifle and its rounds with the gun mod, a bow without it; true for the rifle. */
-    private static boolean giveRangeKit(ServerPlayer player) {
+    static boolean giveRangeKit(ServerPlayer player) {
         ItemStack rifle = Military.rifle(), ammo = Military.ammo(90);
         if (rifle != null && ammo != null) {
             player.getInventory().add(rifle);
@@ -683,19 +689,6 @@ public final class QuestManager {
         } else updateBar(player);
     }
 
-    private static void badEnding(ServerPlayer player) {
-        setStage(player, Stage.END_SVO);
-        player.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0, false, false));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100000, 10, false, false));
-        player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 1f, 0.6f);
-        title(player, "Тебя отправили на СВО", "Конец. Надо было учить анатомию.", ChatFormatting.DARK_RED);
-        narrate(player, "Брезент опускается. «Урал» трогается и выезжает за ворота.");
-        narrate(player, "В кармане — повестка и зачётка с единственной записью: «анатомия — неуд.»");
-        player.sendSystemMessage(Component.literal("Плохой финал. ").withStyle(ChatFormatting.RED)
-                .append(button("Прожить день заново", "/ufa restart", ChatFormatting.YELLOW))
-                .append(" ").append(button("Гулять по Уфе", "/ufa free", ChatFormatting.GREEN)));
-    }
-
     // ------------------------------------------------------------------ dev / command helpers
 
     public static void forceStage(ServerPlayer player, Stage stage) {
@@ -705,6 +698,10 @@ public final class QuestManager {
         }
         if (stage == Stage.CAMP_RANGE) giveRangeKit(player);
         if (stage == Stage.CAMP_TRENCH) player.getInventory().add(Loot.sapperShovel());
+        if (stage == Stage.FRONT_ARRIVE) {
+            Front.start(player);
+            return;
+        }
         setStage(player, stage);
     }
 }
