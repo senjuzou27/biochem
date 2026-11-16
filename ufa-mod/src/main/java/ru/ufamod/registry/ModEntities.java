@@ -22,7 +22,7 @@ public final class ModEntities {
 
     public static final RegistryObject<EntityType<ru.ufamod.entity.VehicleEntity>> VEHICLE = ENTITIES.register("vehicle",
             () -> EntityType.Builder.<ru.ufamod.entity.VehicleEntity>of(ru.ufamod.entity.VehicleEntity::new, MobCategory.MISC).sized(1.8F, 1.5F)
-                    .clientTrackingRange(10).updateInterval(2).noSave().build("vehicle"));
+                    .clientTrackingRange(10).updateInterval(2).build("vehicle"));
 
     @SubscribeEvent
     public static void attributes(EntityAttributeCreationEvent event) {

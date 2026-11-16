@@ -52,7 +52,7 @@ public final class StreetObjects {
                 case FOUNTAIN -> fountain(sink, p, y);
                 case STATUE, BUST, STELE, MEMORIAL, ARTWORK -> monument(sink, city, p, base, r);
                 case KIOSK -> kiosk(sink, city, p, base, r);
-                case CAR -> car(sink, p, base, r);
+                case CAR -> { }   // parked cars are vehicle models now, placed with the chunk's creatures
                 case CROSSING_SIGN -> {
                     sink.column(p.x(), p.z(), base, base + 1, st(Blocks.IRON_BARS));
                     sink.set(p.x(), base + 2, p.z(), st(Blocks.BLUE_CONCRETE));

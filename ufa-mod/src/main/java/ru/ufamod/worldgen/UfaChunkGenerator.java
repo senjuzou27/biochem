@@ -86,6 +86,7 @@ public class UfaChunkGenerator extends ChunkGenerator {
                 if (m != null) spawn(region, m.npcs, x0, z0);
             }
             for (Model m : Stamps.all()) spawn(region, m.npcs, x0, z0);
+            parkedCars(region, city, cx, cz);
             // passers-by on pavements and squares
             Random r = new Random(StreetPainter.hash(cx, cz, 4242));
             if (city.inside(x0, z0) && r.nextInt(3) == 0) {
@@ -103,6 +104,37 @@ public class UfaChunkGenerator extends ChunkGenerator {
         } catch (Throwable t) {
             UfaMod.LOGGER.error("Failed to populate chunk {} of Ufa", region.getCenter(), t);
         }
+    }
+
+    /** Cars parked along the kerbs and on car parks, as models. */
+    private static void parkedCars(WorldGenRegion region, CityData city, int cx, int cz) {
+        for (ru.ufamod.city.MapPoint p : city.points(cx, cz)) {
+            if (p.kind() != ru.ufamod.city.MapPoint.Kind.CAR || p.x() >> 4 != cx || p.z() >> 4 != cz) continue;
+            boolean alongX = Math.abs(p.dx()) > Math.abs(p.dz());
+            double x = p.x() + (alongX ? 2.0 : 1.0), z = p.z() + (alongX ? 1.0 : 2.0);
+            int h = StreetPainter.hash(p.x(), p.z(), 31);
+            float yaw = alongX ? (h % 2 == 0 ? -90f : 90f) : (h % 2 == 0 ? 0f : 180f);
+            ru.ufamod.entity.VehicleEntity v = ru.ufamod.registry.ModEntities.VEHICLE.get().create(region.getLevel());
+            if (v == null) continue;
+            v.setLook(ru.ufamod.entity.VehicleEntity.CAR, colourOf(p.name()));
+            v.setParked(true);
+            v.moveTo(x, city.height((int) Math.floor(x), (int) Math.floor(z)) + 1, z, yaw, 0f);
+            region.addFreshEntity(v);
+        }
+    }
+
+    private static int colourOf(String name) {
+        return switch (name) {
+            case "silver" -> 0xC9CCD1;
+            case "black" -> 0x2A2C30;
+            case "gray" -> 0x7A7D82;
+            case "blue" -> 0x1F4E9E;
+            case "red" -> 0x9E2A24;
+            case "cyan" -> 0x2E6E7A;
+            case "brown" -> 0x6B4A33;
+            case "green" -> 0x2E6E5A;
+            default -> 0xEDEDED;
+        };
     }
 
     private static void spawn(WorldGenRegion region, List<Model.NpcSpec> npcs, int x0, int z0) {

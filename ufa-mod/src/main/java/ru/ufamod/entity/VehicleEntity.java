@@ -34,6 +34,13 @@ public class VehicleEntity extends Entity {
     private static final EntityDataAccessor<Integer> KIND = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> COLOUR = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> BRAKING = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> PARKED = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> ROUTE = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.STRING);
+    private static final String[] ROUTE_NUMBERS = {"3", "10", "51", "101", "110", "226", "247", "290"};
+    private static final String[] ROUTE_NAMES = {"Центр", "Сипайлово", "Черниковка", "Затон", "Инорс", "Дема", "Колхозный рынок", "Ж/д вокзал"};
+
+    /** Client side: how far the wheels have turned, for drawing them. */
+    public float wheelSpin, wheelSpinO;
 
     // server side: the lane ahead as a smooth polyline (x, z pairs) with the arc length at each point
     private final java.util.ArrayList<double[]> path = new java.util.ArrayList<>();
@@ -66,6 +73,8 @@ public class VehicleEntity extends Entity {
         entityData.define(KIND, CAR);
         entityData.define(COLOUR, 0xE8E8E8);
         entityData.define(BRAKING, false);
+        entityData.define(PARKED, false);
+        entityData.define(ROUTE, "");
     }
 
     public int kind() {
@@ -78,6 +87,35 @@ public class VehicleEntity extends Entity {
 
     public boolean braking() {
         return entityData.get(BRAKING);
+    }
+
+    /** The body style of a car, fixed for each vehicle: 0-4 sedan, 5-6 hatchback, 7-8 crossover, 9 taxi. */
+    public int style() {
+        return Math.floorMod((int) (getUUID().getLeastSignificantBits() >>> 3), 10);
+    }
+
+    public boolean parked() {
+        return entityData.get(PARKED);
+    }
+
+    public void setParked(boolean parked) {
+        entityData.set(PARKED, parked);
+    }
+
+    public String routeNumber() {
+        String r = entityData.get(ROUTE);
+        if (!r.isEmpty()) return r.substring(0, r.indexOf('|'));
+        return ROUTE_NUMBERS[Math.floorMod(getUUID().hashCode(), ROUTE_NUMBERS.length)];
+    }
+
+    public String routeName() {
+        String r = entityData.get(ROUTE);
+        if (!r.isEmpty()) return r.substring(r.indexOf('|') + 1);
+        return ROUTE_NAMES[Math.floorMod(getUUID().hashCode() / 7, ROUTE_NAMES.length)];
+    }
+
+    public void setRouteBoard(String number, String name) {
+        entityData.set(ROUTE, number + "|" + name);
     }
 
     public void setLook(int kind, int colour) {
@@ -143,9 +181,9 @@ public class VehicleEntity extends Entity {
         RoadGraph g = CityData.get().graph;
         double w = g.width(he);
         if (g.oneway(he)) return 0;
-        double off = Mth.clamp(w / 4.0, 0.9, 2.6);
-        if (kind() == BUS) off = Math.max(off, 1.3);
-        return off;
+        // cars are parked along the kerb in the outer two metres: keep clear of them
+        double half = kind() == BUS ? 1.3 : kind() == MINIBUS ? 1.05 : 0.95;
+        return Math.max(kind() == BUS ? 0.3 : 0.6, Math.min(w / 4.0, w / 2.0 - 2.0 - half));
     }
 
     private double pathLength() {
@@ -289,6 +327,7 @@ public class VehicleEntity extends Entity {
                 double dx = e.getX() - getX(), dz = e.getZ() - getZ();
                 double ahead = dx * fx + dz * fz, side = Math.abs(dx * -fz + dz * fx);
                 if (e instanceof VehicleEntity v) {
+                    if (v.parked()) continue;
                     // only a vehicle in this lane, driving the same way, holds us up
                     if (Math.abs(Mth.wrapDegrees(v.getYRot() - getYRot())) > 50 || side > 1.6) continue;
                     double d = ahead - halfLength() - v.halfLength();
@@ -313,14 +352,20 @@ public class VehicleEntity extends Entity {
     public void tick() {
         super.tick();
         if (level().isClientSide) {
+            double ox = getX(), oz = getZ();
+            wheelSpinO = wheelSpin;
             if (lerpSteps > 0) {
                 double f = 1.0 / lerpSteps;
                 setPos(getX() + (lerpX - getX()) * f, getY() + (lerpY - getY()) * f, getZ() + (lerpZ - getZ()) * f);
                 setYRot(getYRot() + Mth.wrapDegrees(lerpYaw - getYRot()) * (float) f);
                 lerpSteps--;
             }
+            double moved = Math.hypot(getX() - ox, getZ() - oz);
+            float r = kind() == BUS ? 0.5f : kind() == MINIBUS ? 0.37f : 0.33f;
+            wheelSpin -= (float) (moved / r);
             return;
         }
+        if (parked()) return;
         if (path.isEmpty()) {
             discard();
             return;
@@ -441,15 +486,26 @@ public class VehicleEntity extends Entity {
 
     @Override
     public boolean shouldBeSaved() {
-        return false;
+        return parked();
+    }
+
+    /** A parked car is solid: one bumps into it and can stand on its roof. */
+    @Override
+    public boolean canBeCollidedWith() {
+        return parked();
     }
 
     @Override
     protected void readAdditionalSaveData(CompoundTag tag) {
+        setLook(tag.getInt("Kind"), tag.getInt("Colour"));
+        setParked(tag.getBoolean("Parked"));
     }
 
     @Override
     protected void addAdditionalSaveData(CompoundTag tag) {
+        tag.putInt("Kind", kind());
+        tag.putInt("Colour", colour());
+        tag.putBoolean("Parked", parked());
     }
 
     @Override

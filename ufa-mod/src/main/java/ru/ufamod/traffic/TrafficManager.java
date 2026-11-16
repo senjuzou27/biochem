@@ -64,7 +64,7 @@ public final class TrafficManager {
 
     private void keepTraffic(ServerLevel level, ServerPlayer p) {
         if (!inCity(p)) return;
-        int around = level.getEntitiesOfClass(VehicleEntity.class, new AABB(p.blockPosition()).inflate(150, 60, 150)).size();
+        int around = level.getEntitiesOfClass(VehicleEntity.class, new AABB(p.blockPosition()).inflate(150, 60, 150), v -> !v.parked()).size();
         for (int i = around; i < WANTED && i < around + 3; i++) spawn(level, p);
     }
 
@@ -75,7 +75,7 @@ public final class TrafficManager {
         if (!level.isLoaded(new BlockPos(g.x[node], p.getBlockY(), g.z[node]))) return;
         int he = g.out(node)[rnd.nextInt(g.out(node).length)];
         // not on top of another vehicle
-        if (!level.getEntitiesOfClass(VehicleEntity.class, new AABB(g.x[node] - 9, -64, g.z[node] - 9, g.x[node] + 9, 320, g.z[node] + 9)).isEmpty()) return;
+        if (!level.getEntitiesOfClass(VehicleEntity.class, new AABB(g.x[node] - 9, -64, g.z[node] - 9, g.x[node] + 9, 320, g.z[node] + 9), v -> !v.parked()).isEmpty()) return;
         int roll = rnd.nextInt(100);
         int kind = roll < 80 ? VehicleEntity.CAR : roll < 92 ? VehicleEntity.MINIBUS : VehicleEntity.BUS;
         int colour = kind == VehicleEntity.CAR ? COLOURS[rnd.nextInt(COLOURS.length)] : kind == VehicleEntity.MINIBUS ? (rnd.nextBoolean() ? 0xF2C230 : 0xEDEDED) : 0xEDEDED;
@@ -103,6 +103,7 @@ public final class TrafficManager {
         VehicleEntity bus = ModEntities.VEHICLE.get().create(level);
         if (bus == null) return false;
         bus.setLook(VehicleEntity.BUS, 0xEDEDED);
+        bus.setRouteBoard("110", "Дом актёра");
         bus.setRoute(route, dest);
         level.addFreshEntity(bus);
         return player.startRiding(bus, true);
