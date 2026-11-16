@@ -196,6 +196,7 @@ public final class QuestManager {
     // ------------------------------------------------------------------ starting, restarting, leaving
 
     public static void start(ServerPlayer player) {
+        player.server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(true, player.server);
         MinecraftServer server = player.server;
         ServerLevel ufa = UfaWorld.level(server);
         if (ufa == null) {
@@ -226,6 +227,7 @@ public final class QuestManager {
     }
 
     public static void free(ServerPlayer player) {
+        player.server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(true, player.server);
         setStage(player, Stage.FREE);
         player.setGameMode(GameType.CREATIVE);
         player.removeAllEffects();
@@ -235,6 +237,7 @@ public final class QuestManager {
     }
 
     public static void leave(ServerPlayer player) {
+        player.server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(true, player.server);
         setStage(player, Stage.FREE);
         ServerLevel overworld = player.server.overworld();
         BlockPos spawn = overworld.getSharedSpawnPos();

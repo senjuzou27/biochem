@@ -54,7 +54,9 @@ public final class Front {
         Vec3 p = Plan.FRONT_ARRIVE;
         player.teleportTo(ufa, p.x, p.y, p.z, -90f, 0f);
         player.setRespawnPosition(UfaWorld.UFA, BlockPos.containing(p), -90f, true, false);
-        player.server.overworld().setDayTime(12650);
+        // late dusk that stays: the clock stops for the fight
+        player.server.overworld().setDayTime(12350);
+        player.server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false, player.server);
         player.server.overworld().setWeatherParameters(0, 24000, true, false);
         giveKit(player);
         QuestManager.say(player, COMMANDER, "Пополнение? Студент, говоришь… Ко мне, получишь задачу.");
@@ -301,6 +303,7 @@ public final class Front {
         player.removeAllEffects();
         player.server.overworld().setWeatherParameters(24000, 0, false, false);
         player.server.overworld().setDayTime(6000);
+        player.server.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(true, player.server);
         QuestManager.narrate(player, "Осколок в плечо. Эвакуация в тыл, потом поезд, потом госпиталь.");
         QuestManager.narrate(player, "Хирург на обходе показывает снимок и говорит про плечевое сплетение и подключичную артерию. Ты понимаешь каждое слово.");
         QuestManager.narrate(player, "Ильдар выжил. Сокол — нет. Из тех, с кем ты ехал в «Урале», вернулись не все.");
