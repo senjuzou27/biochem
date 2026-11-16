@@ -109,9 +109,11 @@ public class UfaChunkGenerator extends ChunkGenerator {
     /** Cars parked along the kerbs and on car parks, as models. */
     private static void parkedCars(WorldGenRegion region, CityData city, int cx, int cz) {
         for (ru.ufamod.city.MapPoint p : city.points(cx, cz)) {
-            if (p.kind() != ru.ufamod.city.MapPoint.Kind.CAR || p.x() >> 4 != cx || p.z() >> 4 != cz) continue;
+            if (p.kind() != ru.ufamod.city.MapPoint.Kind.CAR) continue;
             boolean alongX = Math.abs(p.dx()) > Math.abs(p.dz());
             double x = p.x() + (alongX ? 2.0 : 1.0), z = p.z() + (alongX ? 1.0 : 2.0);
+            // a car belongs to the chunk its middle is in: only that chunk can take it now
+            if (((int) Math.floor(x) >> 4) != cx || ((int) Math.floor(z) >> 4) != cz) continue;
             int h = StreetPainter.hash(p.x(), p.z(), 31);
             float yaw = alongX ? (h % 2 == 0 ? -90f : 90f) : (h % 2 == 0 ? 0f : 180f);
             ru.ufamod.entity.VehicleEntity v = ru.ufamod.registry.ModEntities.VEHICLE.get().create(region.getLevel());
