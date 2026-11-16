@@ -98,7 +98,14 @@ public class FrontBuilder extends Build {
         fill(bx + 1, 2, bz, bx + 5, 2, bz + 2, Blocks.COAL_BLOCK);
         fill(bx + 2, 3, bz + 1, bx + 3, 3, bz + 1, Blocks.POLISHED_BLACKSTONE);
         fill(bx - 2, 3, bz + 1, bx + 1, 3, bz + 1, Blocks.IRON_BARS);
-        set(bx + 4, 3, bz, Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, false));
+        set(bx + 4, 3, bz, Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
+        // fires left by the shelling: they light up whoever passes them
+        int[][] fires = {{88, 36}, {94, 70}, {90, 104}, {108, 52}, {106, 86}, {104, 122}, {84, 128}};
+        for (int[] f : fires) {
+            set(f[0], 1, f[1], Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true)
+                    .setValue(net.minecraft.world.level.block.CampfireBlock.SIGNAL_FIRE, false));
+            set(f[0] + 1, 1, f[1], Blocks.COARSE_DIRT);
+        }
         // fallen poles of a power line along the old road
         for (int z = 10; z < FRONT_D - 10; z += 22) {
             fill(34, 1, z, 34, rnd.nextBoolean() ? 6 : 2, z, Blocks.STRIPPED_SPRUCE_LOG);
@@ -124,10 +131,13 @@ public class FrontBuilder extends Build {
             set(x0 - 1, 0, z, Blocks.STRIPPED_SPRUCE_LOG);
             set(x0 + 3, -1, z, Blocks.STRIPPED_SPRUCE_LOG);
             set(x0 + 3, 0, z, Blocks.STRIPPED_SPRUCE_LOG);
-            // the parapet: sandbags with loopholes
-            set(x0 + 3, 1, z, z % 3 == 0 ? AIR : sandbag);
-            set(x0 + 4, 1, z, z % 3 == 0 ? AIR : sandbag);
-            if (z % 3 != 0) set(x0 + 4, 2, z, sandbag);
+            // the parapet: a low row of sandbags to fire over standing on the step and to hide behind
+            // crouching, and taller stacks every few blocks for cover when moving along the trench
+            set(x0 + 3, 1, z, st(Blocks.MUD_BRICK_SLAB));
+            if (z % 4 == 0) {
+                set(x0 + 4, 1, z, sandbag);
+                set(x0 + 4, 2, z, sandbag);
+            }
             // the spoil heap behind
             set(x0 - 2, 1, z, Blocks.COARSE_DIRT);
             if (z % 9 == 4) set(x0 + 1, -1, z, Blocks.LANTERN);

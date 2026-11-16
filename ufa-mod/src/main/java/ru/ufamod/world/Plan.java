@@ -38,10 +38,10 @@ public final class Plan {
     public static final int[][] FRONT_COVER_MID = {{98, 32}, {100, 46}, {96, 58}, {102, 70}, {97, 82}, {101, 94}, {96, 106}, {100, 118}, {98, 128}};
     /** Just beyond the second row of wire. */
     public static final int[][] FRONT_COVER_NEAR = {{76, 30}, {77, 44}, {75, 56}, {78, 66}, {76, 78}, {77, 90}, {75, 102}, {78, 114}, {76, 126}};
-    /** Local x of the parapet loopholes: the trench zigzags, so it is one of two. */
+    /** Local x of the low parapet in front of the firing step: the trench zigzags, so it is one of two. */
     public static int frontLoopholeX(int localZ) {
         int jog = ((localZ - 24) / 16) % 2 == 0 ? 0 : 1;
-        return 58 + jog + 4;
+        return 58 + jog + 3;
     }
 
     private static AABB campBox(int x1, int y1, int z1, int x2, int y2, int z2) {

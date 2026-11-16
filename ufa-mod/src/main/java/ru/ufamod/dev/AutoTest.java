@@ -290,11 +290,14 @@ public final class AutoTest {
         });
         step(260, "the first attack comes", () -> { });
         shot("13e_front_attack");
-        step(700, "they come closer", () -> {
-            for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))
-                UfaMod.LOGGER.info("AUTOTEST enemy at {} tier {}", e.blockPosition().toShortString(), e.getPersistentData().getInt("tier"));
-        });
-        shot("13e2_front_close");
+        for (int k = 0; k < 4; k++) {
+            step(350, "they come closer", () -> {
+                for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))
+                    UfaMod.LOGGER.info("AUTOTEST enemy at {} tier {}", e.blockPosition().toShortString(), e.getPersistentData().getInt("tier"));
+            });
+            step(5, "back on the firing step", () -> player.teleportTo(player.serverLevel(), fx + 61.5, fy, fz + 81.5, -90f, 4f));
+            shot("13e" + (k + 2) + "_front_close");
+        }
         for (int i = 0; i < 14; i++) {
             step(80, "fight", () -> {
                 for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))

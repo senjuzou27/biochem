@@ -52,6 +52,9 @@ public final class UfaCommand {
                 .then(Commands.literal("start").executes(c -> run(c.getSource(), QuestManager::start)))
                 .then(Commands.literal("free").executes(c -> run(c.getSource(), QuestManager::free)))
                 .then(Commands.literal("leave").executes(c -> run(c.getSource(), QuestManager::leave)))
+                .then(Commands.literal("skip").executes(c -> run(c.getSource(), p -> {
+                    if (p.getVehicle() instanceof ru.ufamod.entity.VehicleEntity v && v.onRoute()) v.finishRide();
+                })))
                 .then(Commands.literal("tp").then(Commands.argument("place", StringArgumentType.word())
                         .suggests((c, b) -> SharedSuggestionProvider.suggest(places().keySet(), b))
                         .executes(c -> {

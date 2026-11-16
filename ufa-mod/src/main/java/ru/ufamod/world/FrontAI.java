@@ -100,7 +100,7 @@ public final class FrontAI {
         if (t >= ASSAULT) {
             // the loophole nearest to where the player is, or a spot inside the trench behind it
             int lz = Mth.floor(p.getZ()) - Plan.FRONT_OZ + e.getRandom().nextInt(9) - 4;
-            lz = Math.max(26, Math.min(134, lz - Math.floorMod(lz, 3)));
+            lz = Math.max(26, Math.min(134, lz));
             x = Plan.FRONT_OX + Plan.frontLoopholeX(lz) + 0.5;
             z = Plan.FRONT_OZ + lz + 0.5;
         } else {
@@ -219,10 +219,10 @@ public final class FrontAI {
         int x = Plan.FRONT_OX + 80 + rnd.nextInt(50), z = Plan.FRONT_OZ + 20 + rnd.nextInt(Plan.FRONT_D - 40);
         int gy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
         level.playSound(null, x, gy + 2, z, SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.NEUTRAL, 3f, 0.8f);
-        for (int[] o : new int[][]{{0, 0}, {9, 0}, {-9, 0}, {0, 9}, {0, -9}}) {
-            BlockPos b = new BlockPos(x + o[0], gy + 5, z + o[1]);
+        for (int[] o : new int[][]{{0, 0}, {10, 0}, {-10, 0}, {0, 10}, {0, -10}, {10, 10}, {-10, -10}, {10, -10}, {-10, 10}}) {
+            BlockPos b = new BlockPos(x + o[0], gy + 3, z + o[1]);
             if (!level.getBlockState(b).isAir()) continue;
-            level.setBlock(b, Blocks.LIGHT.defaultBlockState().setValue(net.minecraft.world.level.block.LightBlock.LEVEL, 13), 3);
+            level.setBlock(b, Blocks.LIGHT.defaultBlockState().setValue(net.minecraft.world.level.block.LightBlock.LEVEL, 15), 3);
             lit.add(new long[]{b.asLong(), now + 200});
         }
         level.sendParticles(ParticleTypes.END_ROD, x + 0.5, gy + 14, z + 0.5, 40, 0.3, 0.3, 0.3, 0.02);

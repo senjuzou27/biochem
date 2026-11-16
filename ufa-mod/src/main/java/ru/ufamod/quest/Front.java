@@ -54,7 +54,7 @@ public final class Front {
         Vec3 p = Plan.FRONT_ARRIVE;
         player.teleportTo(ufa, p.x, p.y, p.z, -90f, 0f);
         player.setRespawnPosition(UfaWorld.UFA, BlockPos.containing(p), -90f, true, false);
-        player.server.overworld().setDayTime(13000);
+        player.server.overworld().setDayTime(12650);
         player.server.overworld().setWeatherParameters(0, 24000, true, false);
         giveKit(player);
         QuestManager.say(player, COMMANDER, "Пополнение? Студент, говоришь… Ко мне, получишь задачу.");
@@ -121,7 +121,7 @@ public final class Front {
                 if (stage == Stage.FRONT_ARRIVE) {
                     QuestManager.setStage(player, Stage.FRONT_HOLD);
                     QuestManager.say(player, name, "Задача простая: держать этот окоп. Выходи по ходу сообщения, вставай на ступень у бруствера.");
-                    QuestManager.say(player, name, "Стреляй через бойницы между мешками. Голову не высовывай. Услышишь свист — пригнись.");
+                    QuestManager.say(player, name, "Стоя на ступени, стреляешь поверх мешков. Пригнёшься (Shift) — тебя не видно. Услышишь свист — пригнись.");
                 } else if (stage == Stage.FRONT_HOLD) QuestManager.say(player, name, "В окоп! Держать позицию!");
                 else if (stage == Stage.FRONT_MEDEVAC) QuestManager.say(player, name, "Ильдар на посту за проволокой, проход слева. Тащи его сюда, к Лене.");
                 else QuestManager.say(player, name, "Отдыхай, пока тихо.");
@@ -219,7 +219,7 @@ public final class Front {
         int every = d.getInt("next") > 0 ? 70 : 160;
         if (timer % every == every / 2) shell(player, level, 11);
         // illumination flares over the field while the enemy is attacking
-        if (d.getInt("next") == 0 && timer % 240 == 30) ru.ufamod.world.FrontAI.flare(level, FLARES, level.getGameTime(), RANDOM);
+        if (d.getInt("next") == 0 && timer % 160 == 30) ru.ufamod.world.FrontAI.flare(level, FLARES, level.getGameTime(), RANDOM);
     }
 
     private static void spawnWave(ServerLevel level, int n) {

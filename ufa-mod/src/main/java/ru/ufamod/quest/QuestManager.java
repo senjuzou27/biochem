@@ -487,7 +487,8 @@ public final class QuestManager {
         }
         player.playNotifySound(SoundEvents.MINECART_RIDING, SoundSource.AMBIENT, 0.7f, 1.2f);
         if (ru.ufamod.traffic.TrafficManager.ride(player, dest)) {
-            narrate(player, "Автобус едет по улицам города. Выйти раньше — клавиша приседания (Shift).");
+            narrate(player, "Автобус едет по улицам города, дорога займёт пару минут. Выйти раньше — клавиша приседания (Shift).");
+            player.sendSystemMessage(button("Доехать сразу", "/ufa skip", ChatFormatting.AQUA));
         } else {
             // no way by road: the old instant ride
             player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false, false));
