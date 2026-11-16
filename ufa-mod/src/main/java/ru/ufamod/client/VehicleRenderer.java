@@ -107,8 +107,28 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
         for (float wz : new float[]{front, rear})
             for (int s = -1; s <= 1; s += 2) b.disc(s * (hw + 0.004f), wy, wz, wr + 0.07f, ARCH, 14, 0, s);
         b.prism(-hw, hw, body, c, null);
-        // the cabin with the glass drawn later; the roof and pillars here
-        b.prism(-cw, cw, cab, c, new int[]{-1, -2, c, -2});
+        // the cabin: roof here, glass later; the sides are only pillars around the windows
+        b.prism(-cw, cw, cab, c, new int[]{-1, -2, c, -2}, false);
+        float split0 = (cab[0][0] + cab[1][0]) / 2f + 0.15f;
+        for (int s = -1; s <= 1; s += 2) {
+            float x = s * cw;
+            float top = cab[2][1];
+            b.poly(x, new float[][]{cab[1], cab[2], {cab[2][0] - 0.09f, cab[2][1]}, {cab[1][0] - 0.14f, cab[1][1]}}, c);                 // A pillar
+            b.poly(x, new float[][]{{cab[0][0] + 0.16f, cab[0][1]}, {cab[3][0] + 0.1f, cab[3][1]}, cab[3], cab[0]}, c);                    // C pillar
+            b.side(x, top - 0.06f, cab[3][0], top, cab[2][0], c);                                                                         // roof rail
+            b.side(x, cab[0][1], split0 - 0.06f, top, split0 + 0.06f, c);                                                                  // B pillar
+            b.side(x, cab[0][1], cab[0][0], cab[0][1] + 0.05f, cab[1][0], c);                                                             // belt line
+        }
+        // the inside: dark trim, seat backs and head rests seen through the glass
+        int trim = 0x26272A;
+        b.box(-cw + 0.03f, cab[0][1] - 0.02f, cab[0][0] + 0.05f, cw - 0.03f, cab[0][1] + 0.01f, cab[1][0] - 0.05f, trim);
+        b.box(-cw + 0.03f, cab[2][1] - 0.03f, cab[3][0] + 0.02f, cw - 0.03f, cab[2][1] - 0.01f, cab[2][0] - 0.02f, 0x6A6C70);
+        for (int s = -1; s <= 1; s += 2) {
+            b.box(s * 0.12f, cab[0][1], split0 - 0.18f, s * 0.6f, cab[0][1] + 0.38f, split0 - 0.08f, trim);
+            b.box(s * 0.25f, cab[0][1] + 0.38f, split0 - 0.17f, s * 0.47f, cab[0][1] + 0.5f, split0 - 0.09f, trim);
+        }
+        b.box(-cw + 0.08f, cab[0][1], cab[0][0] + 0.25f, cw - 0.08f, cab[0][1] + 0.36f, cab[0][0] + 0.38f, trim);
+        b.box(-0.55f, cab[0][1], cab[1][0] - 0.30f, 0.55f, cab[0][1] + 0.1f, cab[1][0] - 0.12f, trim);
         // lower sills and bumpers in dark plastic
         b.box(-hw - 0.01f, 0.30f, zMin + 0.35f, -hw + 0.03f, 0.40f, zMax - 0.35f, PLASTIC);
         b.box(hw - 0.03f, 0.30f, zMin + 0.35f, hw + 0.01f, 0.40f, zMax - 0.35f, PLASTIC);
@@ -176,11 +196,11 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
         g.slope(-cw + 0.06f, cw - 0.06f, cab[3], cab[0], 0.04f, GLASS, 170);
         // side windows with a pillar between them
         float split = (cab[0][0] + cab[1][0]) / 2f + 0.15f;
-        float yb = cab[0][1] + 0.05f, yt = cab[2][1] - 0.05f;
+        float yb = cab[0][1] + 0.05f, yt = cab[2][1] - 0.06f;
         for (int s = -1; s <= 1; s += 2) {
             float x = s * (cw + 0.006f);
-            g.sideWindow(x, s, cab, cab[0][0] + 0.12f, split - 0.06f, yb, yt, GLASS, 175);
-            g.sideWindow(x, s, cab, split + 0.06f, cab[1][0] - 0.08f, yb, yt, GLASS, 175);
+            g.sideWindow(x, s, cab, cab[0][0] + 0.12f, split - 0.06f, yb, yt, GLASS, 140);
+            g.sideWindow(x, s, cab, split + 0.06f, cab[1][0] - 0.08f, yb, yt, GLASS, 140);
         }
     }
 
@@ -192,7 +212,19 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
         float hw = 1.02f;
         for (float wz : new float[]{2.15f, -1.75f})
             for (int s = -1; s <= 1; s += 2) b.disc(s * (hw + 0.004f), 0.37f, wz, 0.45f, ARCH, 14, 0, s);
-        b.prism(-hw, hw, MINI, c, new int[]{-1, -1, -1, -1, -2, -1, -1, -1, -1});
+        b.prism(-hw, hw, MINI, c, new int[]{-1, -1, -1, -1, -2, -1, -1, -1, -1}, false);
+        for (int s = -1; s <= 1; s += 2) {
+            float x = s * hw;
+            // under the windows, the cab window frame, above the windows; pillars between the windows
+            b.poly(x, new float[][]{{-3.2f, 0.35f}, {3.0f, 0.35f}, {3.14f, 0.6f}, {3.06f, 1.0f}, {2.55f, 1.32f}, {2.52f, 1.42f}, {-3.2f, 1.42f}}, c);
+            b.poly(x, new float[][]{{-3.2f, 2.24f}, {2.13f, 2.24f}, {2.05f, 2.42f}, {1.7f, 2.58f}, {-3.1f, 2.58f}, {-3.2f, 2.45f}}, c);
+            b.poly(x, new float[][]{{1.92f, 1.42f}, {2.52f, 1.42f}, {2.13f, 2.24f}, {1.92f, 2.24f}}, c);
+            for (float z = -3.2f; z < 1.95f; z += 1.0f) b.side(x, 1.42f, z, 2.24f, z + 0.1f, PLASTIC);
+        }
+        // the back with a window
+        b.across(-hw, 0.35f, -3.2f, hw, 1.45f, c);
+        b.across(-hw, 2.30f, -3.2f, hw, 2.45f, c);
+        for (int s = -1; s <= 1; s += 2) b.side(s * (hw - 0.05f), 1.45f, -3.2f, 2.30f, -3.18f, c);
         // a darker skirt and bumpers
         b.box(-hw - 0.01f, 0.35f, -3.15f, hw + 0.01f, 0.55f, 3.05f, shade(c, 0.85f));
         b.box(-hw + 0.04f, 0.33f, 2.98f, hw - 0.04f, 0.55f, 3.18f, PLASTIC);
@@ -208,11 +240,9 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
         }
         b.box(-0.26f, 0.38f, 3.18f, 0.26f, 0.49f, 3.19f, PLATE);
         b.box(-0.26f, 0.62f, -3.27f, 0.26f, 0.73f, -3.26f, PLATE);
-        // window frames: a black band with pillars on both sides
+        // the sliding door on the right side
         for (int s = -1; s <= 1; s += 2) {
             float x = s * (hw + 0.004f);
-            b.box(x - 0.005f, 1.38f, -2.95f, x + 0.005f, 2.28f, 1.95f, PLASTIC);
-            // the sliding door on the right side
             if (s < 0) {
                 b.box(x - 0.008f, 0.45f, 0.55f, x + 0.008f, 2.30f, 0.58f, shade(c, 0.5f));
                 b.box(x - 0.008f, 0.45f, 1.58f, x + 0.008f, 2.30f, 1.61f, shade(c, 0.5f));
@@ -239,7 +269,7 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
             for (float z = -2.9f; z < 1.9f; z += 1.0f) {
                 float z2 = Math.min(z + 0.9f, 1.92f);
                 if (s < 0 && z2 > 0.55f && z < 1.6f) continue;
-                g.flat(x, 1.42f, z, 2.24f, z2, s, GLASS, 165);
+                g.flat(x, 1.42f, z + 0.1f, 2.24f, z2, s, GLASS, 130);
             }
             if (s < 0) g.flat(x, 1.0f, 0.62f, 2.24f, 1.55f, s, GLASS, 165);
             // the cab window under the slope
@@ -258,7 +288,29 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
         int white = 0xEDEDED, green = 0x2F7A3A, blue = 0x1F4E9E;
         for (float wz : new float[]{3.35f, -2.95f})
             for (int s = -1; s <= 1; s += 2) b.disc(s * (hw + 0.004f), 0.5f, wz, 0.6f, ARCH, 16, 0, s);
-        b.prism(-hw, hw, BUS, white, new int[]{-1, -1, white, -1, -1, -1, -1});
+        b.prism(-hw, hw, BUS, white, new int[]{-1, -1, -2, -1, -1, -1, -2}, false);
+        for (int s = -1; s <= 1; s += 2) {
+            float x = s * hw;
+            // the wall under the windows, except where the doors are on the right side
+            float z = -5.30f;
+            if (s < 0) for (float[] d : DOORS) {
+                b.side(x, 0.32f, z, 1.30f, d[0] - 0.05f, white);
+                z = d[1] + 0.05f;
+            }
+            b.side(x, 0.32f, z, 1.30f, 5.32f, white);
+            b.side(x, 2.60f, -5.30f, 2.92f, 5.32f, white);
+            b.poly(x, new float[][]{{5.32f, 2.92f}, {5.18f, 3.05f}, {-5.18f, 3.05f}, {-5.30f, 2.92f}}, white);
+            b.poly(x, new float[][]{{5.22f, 0.32f}, {5.32f, 0.55f}, {5.32f, 1.30f}, {5.22f, 1.30f}}, white);
+        }
+        // front: the panel under the windscreen and the board above it; back: under and above the window
+        b.across(-hw, 0.55f, 5.32f, hw, 1.02f, white);
+        b.across(-hw, 2.62f, 5.32f, hw, 2.92f, white);
+        b.across(-hw, 0.32f, -5.30f, hw, 1.50f, white);
+        b.across(-hw, 2.60f, -5.30f, hw, 2.92f, white);
+        for (int s = -1; s <= 1; s += 2) {
+            b.side(s * (hw - 0.07f), 1.50f, -5.30f, 2.60f, -5.24f, white);
+            b.side(s * (hw - 0.04f), 1.02f, 5.26f, 2.62f, 5.32f, PLASTIC);
+        }
         // livery: a green skirt and a blue stripe under the windows
         for (int s = -1; s <= 1; s += 2) {
             float x = s * (hw + 0.005f);
@@ -304,8 +356,12 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
             seat(b, 0.78f, 1.18f, z, 0.4f);
             if (z < -3.0f || z > 1.6f) seat(b, -1.15f, -0.75f, z, 0.4f);
         }
-        for (float z = -4.5f; z <= 4.0f; z += 1.6f) b.box(-0.03f, 0.40f, z - 0.03f, 0.03f, 3.0f, z + 0.03f, RAIL);
-        for (int s = -1; s <= 1; s += 2) b.box(s * 0.62f - 0.025f, 2.6f, -5.0f, s * 0.62f + 0.025f, 2.65f, 4.8f, RAIL);
+        // handrails along the aisle, poles by the seats, light strips in the ceiling
+        for (int s = -1; s <= 1; s += 2) {
+            b.box(s * 0.55f - 0.025f, 2.55f, -5.0f, s * 0.55f + 0.025f, 2.6f, 4.8f, RAIL);
+            for (float z = -4.5f; z <= 3.5f; z += 1.7f) b.box(s * 0.33f - 0.025f, 0.40f, z - 0.025f, s * 0.33f + 0.025f, 2.58f, z + 0.025f, RAIL);
+            b.boxLit(s * 0.95f - 0.12f, 2.98f, -4.8f, s * 0.95f + 0.12f, 3.0f, 4.6f, 0xF4F1E6, FULL);
+        }
         // the driver's seat and a dashboard
         seat(b, 0.4f, 0.85f, 4.35f, 0.4f);
         b.box(-1.1f, 0.4f, 4.95f, 1.1f, 1.05f, 5.25f, PLASTIC);
@@ -423,8 +479,12 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
          * -1 the body colour, -2 leave it open (glass goes there later).
          */
         void prism(float x1, float x2, float[][] p, int rgb, int[] edge) {
+            prism(x1, x2, p, rgb, edge, true);
+        }
+
+        void prism(float x1, float x2, float[][] p, int rgb, int[] edge, boolean sides) {
             int nPts = p.length;
-            for (int i = 1; i + 1 < nPts; i++) {
+            for (int i = 1; sides && i + 1 < nPts; i++) {
                 quad(new float[]{x2, p[0][1], p[0][0]}, new float[]{x2, p[i][1], p[i][0]}, new float[]{x2, p[i + 1][1], p[i + 1][0]}, new float[]{x2, p[i + 1][1], p[i + 1][0]}, rgb, 255, light);
                 quad(new float[]{x1, p[0][1], p[0][0]}, new float[]{x1, p[i + 1][1], p[i + 1][0]}, new float[]{x1, p[i][1], p[i][0]}, new float[]{x1, p[i][1], p[i][0]}, rgb, 255, light);
             }
@@ -437,6 +497,22 @@ public class VehicleRenderer extends EntityRenderer<VehicleEntity> {
                 int col = dy == 0 && dz > 0 ? shade(c, 0.6f) : c;
                 quad(new float[]{x1, p[i][1], p[i][0]}, new float[]{x2, p[i][1], p[i][0]}, new float[]{x2, p[j][1], p[j][0]}, new float[]{x1, p[j][1], p[j][0]}, col, 255, light);
             }
+        }
+
+        /** A flat convex polygon (z, y) at x. */
+        void poly(float x, float[][] p, int rgb) {
+            for (int i = 1; i + 1 < p.length; i++)
+                quad(new float[]{x, p[0][1], p[0][0]}, new float[]{x, p[i][1], p[i][0]}, new float[]{x, p[i + 1][1], p[i + 1][0]}, new float[]{x, p[i + 1][1], p[i + 1][0]}, rgb, 255, light);
+        }
+
+        /** A rectangle on a side (x fixed). */
+        void side(float x, float y1, float z1, float y2, float z2, int rgb) {
+            quad(new float[]{x, y1, z1}, new float[]{x, y1, z2}, new float[]{x, y2, z2}, new float[]{x, y2, z1}, rgb, 255, light);
+        }
+
+        /** A rectangle across the front or back (z fixed). */
+        void across(float x1, float y1, float z, float x2, float y2, int rgb) {
+            quad(new float[]{x1, y1, z}, new float[]{x2, y1, z}, new float[]{x2, y2, z}, new float[]{x1, y2, z}, rgb, 255, light);
         }
 
         /** A sheet of glass over the slope from profile point a to b, set out from the surface by d. */

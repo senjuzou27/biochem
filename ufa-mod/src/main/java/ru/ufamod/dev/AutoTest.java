@@ -124,7 +124,68 @@ public final class AutoTest {
         });
     }
 
+    private void showroom(Places P) {
+        // a showroom of the vehicle models on Gostiny Dvor square
+        final List<ru.ufamod.entity.VehicleEntity> shown = new java.util.ArrayList<>();
+        BlockPos sq = street(P.gostiny.getX(), P.gostiny.getZ());
+        step(10, "showroom", () -> {
+            ServerLevel lvl = player.serverLevel();
+            for (int i = 0; i < 12; i++) {
+                ru.ufamod.entity.VehicleEntity v = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
+                v.setLook(ru.ufamod.entity.VehicleEntity.CAR, ru.ufamod.traffic.TrafficManager.COLOURS[i % ru.ufamod.traffic.TrafficManager.COLOURS.length]);
+                v.setParked(true);
+                v.moveTo(sq.getX() + i * 2.6 + 0.5, sq.getY() - 1, sq.getZ() + 0.5, 0f, 0f);
+                lvl.addFreshEntity(v);
+                shown.add(v);
+            }
+            ru.ufamod.entity.VehicleEntity mini = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
+            mini.setLook(ru.ufamod.entity.VehicleEntity.MINIBUS, 0xF2C230);
+            mini.setParked(true);
+            mini.moveTo(sq.getX() + 3.5, sq.getY() - 1, sq.getZ() - 9.5, 0f, 0f);
+            lvl.addFreshEntity(mini);
+            shown.add(mini);
+            ru.ufamod.entity.VehicleEntity bus = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
+            bus.setLook(ru.ufamod.entity.VehicleEntity.BUS, 0xEDEDED);
+            bus.setParked(true);
+            bus.setRouteBoard("110", "Дом актёра");
+            bus.moveTo(sq.getX() + 18.5, sq.getY() - 1, sq.getZ() - 12.5, 0f, 0f);
+            lvl.addFreshEntity(bus);
+            shown.add(bus);
+        });
+        view(sq.offset(-4, 0, 5), sq.offset(4, -1, 0), 14);
+        shot("50_cars_front");
+        view(sq.offset(14, 0, 4), sq.offset(14, -1, 0), 20);
+        shot("51_cars_close");
+        view(sq.offset(-3, 0, -6), sq.offset(4, -1, 1), 16);
+        shot("52_cars_rear");
+        view(sq.offset(23, 0, -3), sq.offset(18, 0, -10), 2);
+        shot("53_bus_front");
+        view(sq.offset(12, 0, -8), sq.offset(18, 0, -14), 2);
+        shot("54_bus_side");
+        view(sq.offset(0, 0, -4), sq.offset(4, 0, -10), 6);
+        shot("55_minibus");
+        step(5, "sit in the bus", () -> player.teleportTo(player.serverLevel(), sq.getX() + 18.5 + 0.55, sq.getY() - 1 + 0.45, sq.getZ() - 12.5 - 3.0, 180f, 8f));
+        step(40, "look", () -> { });
+        shot("56_bus_inside");
+        step(5, "look forward", () -> player.teleportTo(player.serverLevel(), sq.getX() + 18.5 - 0.3, sq.getY() - 1 + 0.45, sq.getZ() - 12.5 + 1.0, 0f, 8f));
+        step(40, "look", () -> { });
+        shot("57_bus_inside_front");
+        step(5, "clear the showroom", () -> shown.forEach(v -> v.discard()));
+    }
+
     private void script() {
+        if (Boolean.getBoolean("ufamod.showroom")) {
+            step(10, "daylight", () -> {
+                player.server.overworld().setDayTime(6000);
+                player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+            });
+            showroom(Places.get());
+            step(60, "done", () -> {
+                UfaMod.LOGGER.info("AUTOTEST FINISHED with {} failure(s)", failures);
+                finished = true;
+            });
+            return;
+        }
         Places P = Places.get();
         double cx = Plan.CAMP_OX, cz = Plan.CAMP_OZ;
         int cy = Plan.BASE_Y + 1;
@@ -402,46 +463,7 @@ public final class AutoTest {
             });
         }
         shot("24b_traffic");
-        // a showroom of the vehicle models on Gostiny Dvor square
-        final List<ru.ufamod.entity.VehicleEntity> shown = new java.util.ArrayList<>();
-        BlockPos sq = street(P.gostiny.getX(), P.gostiny.getZ());
-        step(10, "showroom", () -> {
-            ServerLevel lvl = player.serverLevel();
-            for (int i = 0; i < 12; i++) {
-                ru.ufamod.entity.VehicleEntity v = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
-                v.setLook(ru.ufamod.entity.VehicleEntity.CAR, ru.ufamod.traffic.TrafficManager.COLOURS[i % ru.ufamod.traffic.TrafficManager.COLOURS.length]);
-                v.setParked(true);
-                v.moveTo(sq.getX() + i * 2.6 + 0.5, sq.getY() - 1, sq.getZ() + 0.5, 0f, 0f);
-                lvl.addFreshEntity(v);
-                shown.add(v);
-            }
-            ru.ufamod.entity.VehicleEntity mini = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
-            mini.setLook(ru.ufamod.entity.VehicleEntity.MINIBUS, 0xF2C230);
-            mini.setParked(true);
-            mini.moveTo(sq.getX() + 3.5, sq.getY() - 1, sq.getZ() - 9.5, 0f, 0f);
-            lvl.addFreshEntity(mini);
-            shown.add(mini);
-            ru.ufamod.entity.VehicleEntity bus = ru.ufamod.registry.ModEntities.VEHICLE.get().create(lvl);
-            bus.setLook(ru.ufamod.entity.VehicleEntity.BUS, 0xEDEDED);
-            bus.setParked(true);
-            bus.setRouteBoard("110", "Дом актёра");
-            bus.moveTo(sq.getX() + 18.5, sq.getY() - 1, sq.getZ() - 12.5, 0f, 0f);
-            lvl.addFreshEntity(bus);
-            shown.add(bus);
-        });
-        view(sq.offset(-4, 0, 5), sq.offset(4, -1, 0), 14);
-        shot("50_cars_front");
-        view(sq.offset(14, 0, 4), sq.offset(14, -1, 0), 20);
-        shot("51_cars_close");
-        view(sq.offset(-3, 0, -6), sq.offset(4, -1, 1), 16);
-        shot("52_cars_rear");
-        view(sq.offset(23, 0, -3), sq.offset(18, 0, -10), 2);
-        shot("53_bus_front");
-        view(sq.offset(12, 0, -8), sq.offset(18, 0, -14), 2);
-        shot("54_bus_side");
-        view(sq.offset(0, 0, -4), sq.offset(4, 0, -10), 6);
-        shot("55_minibus");
-        step(5, "clear the showroom", () -> shown.forEach(v -> v.discard()));
+        showroom(P);
         tp(street(1500, -1200), 200, -12);
         shot("25_dorm_district");
         tp(street(700, 300), 135, -10);

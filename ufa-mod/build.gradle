@@ -41,6 +41,7 @@ minecraft {
             if (project.hasProperty('ufaDump')) systemProperty 'ufamod.dump', project.property('ufaDump')
             if (project.hasProperty('ufaExit')) systemProperty 'ufamod.exitAfterBuild', 'true'
             if (project.hasProperty('ufaDebug')) systemProperty 'ufamod.debugBuildings', project.property('ufaDebug')
+            if (project.hasProperty('ufaShowroom')) systemProperty 'ufamod.showroom', 'true'
             // -PufaAuto plays the whole story automatically and takes screenshots (see ru.ufamod.dev.AutoTest).
             if (project.hasProperty('ufaAuto')) systemProperty 'ufamod.autotest', 'true'
 
