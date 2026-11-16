@@ -35,7 +35,9 @@ public final class Front {
     private Front() {}
 
     public static final int WAVES = 3;
-    private static final int[] WAVE_SIZE = {4, 5, 6};
+    private static final int[] WAVE_SIZE = {5, 6, 8};
+    /** Light blocks of the illumination flares and when they go out. */
+    private static final List<long[]> FLARES = new java.util.ArrayList<>();
     private static final Random RANDOM = new Random();
     private static final String COMMANDER = "Командир взвода «Сокол»", MEDIC = "Санинструктор Лена", COMRADE = "Мобилизованный Ильдар";
 
@@ -52,7 +54,7 @@ public final class Front {
         Vec3 p = Plan.FRONT_ARRIVE;
         player.teleportTo(ufa, p.x, p.y, p.z, -90f, 0f);
         player.setRespawnPosition(UfaWorld.UFA, BlockPos.containing(p), -90f, true, false);
-        player.server.overworld().setDayTime(13800);
+        player.server.overworld().setDayTime(13000);
         player.server.overworld().setWeatherParameters(0, 24000, true, false);
         giveKit(player);
         QuestManager.say(player, COMMANDER, "Пополнение? Студент, говоришь… Ко мне, получишь задачу.");
@@ -157,6 +159,7 @@ public final class Front {
 
     static void tick(ServerPlayer player, Stage stage, int timer) {
         ServerLevel level = player.serverLevel();
+        if (!FLARES.isEmpty()) ru.ufamod.world.FrontAI.unlight(level, FLARES, level.getGameTime(), stage != Stage.FRONT_HOLD);
         if (!Plan.FRONT_BOX.contains(player.position())) return;
         switch (stage) {
             case FRONT_HOLD -> hold(player, level, timer);
@@ -215,19 +218,22 @@ public final class Front {
         // artillery: often between the attacks, now and then during them
         int every = d.getInt("next") > 0 ? 70 : 160;
         if (timer % every == every / 2) shell(player, level, 11);
+        // illumination flares over the field while the enemy is attacking
+        if (d.getInt("next") == 0 && timer % 240 == 30) ru.ufamod.world.FrontAI.flare(level, FLARES, level.getGameTime(), RANDOM);
     }
 
     private static void spawnWave(ServerLevel level, int n) {
         for (int i = 0; i < n; i++) {
             int[] c = Plan.FRONT_COVER[RANDOM.nextInt(Plan.FRONT_COVER.length)];
-            int sx = Plan.FRONT_OX + Plan.FRONT_ENEMY_X, sz = Plan.FRONT_OZ + c[1] + RANDOM.nextInt(9) - 4;
+            int sx = Plan.FRONT_OX + Plan.FRONT_ENEMY_X - RANDOM.nextInt(4), sz = Plan.FRONT_OZ + c[1] + RANDOM.nextInt(9) - 4;
             int sy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, sx, sz);
             NpcEntity e = UfaWorld.spawnNpc(level, sx + 0.5, sy, sz + 0.5, 90f, NpcRole.ENEMY, "Противник", RANDOM.nextInt(2), false);
             if (e == null) continue;
             e.setHealth(14f);
+            e.getPersistentData().putLong("born", level.getGameTime());
+            e.getPersistentData().putBoolean("stormer", RANDOM.nextInt(10) < 4);
             e.setLifetime(20 * 60 * 15);
-            int cx = Plan.FRONT_OX + c[0] + RANDOM.nextInt(3) - 1, cz = Plan.FRONT_OZ + c[1] + RANDOM.nextInt(3) - 1;
-            e.advanceTo(new BlockPos(cx, level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz), cz));
+            // where it goes from there is up to FrontAI
         }
     }
 

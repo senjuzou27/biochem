@@ -34,7 +34,15 @@ public final class Plan {
     public static final AABB FRONT_BOX = new AABB(FRONT_OX, BASE_Y - 8, FRONT_OZ, FRONT_OX + FRONT_W, BASE_Y + 40, FRONT_OZ + FRONT_D);
     /** Where the enemy comes out of the tree line, and the craters it advances to (local x, z). */
     public static final int FRONT_ENEMY_X = 150;
-    public static final int[][] FRONT_COVER = {{98, 34}, {104, 50}, {97, 62}, {110, 74}, {100, 88}, {108, 100}, {96, 112}, {112, 124}, {118, 56}, {118, 92}};
+    public static final int[][] FRONT_COVER = {{118, 34}, {122, 50}, {116, 62}, {124, 74}, {118, 88}, {122, 100}, {116, 112}, {124, 124}, {120, 44}, {120, 118}};
+    public static final int[][] FRONT_COVER_MID = {{98, 32}, {100, 46}, {96, 58}, {102, 70}, {97, 82}, {101, 94}, {96, 106}, {100, 118}, {98, 128}};
+    /** Just beyond the second row of wire. */
+    public static final int[][] FRONT_COVER_NEAR = {{76, 30}, {77, 44}, {75, 56}, {78, 66}, {76, 78}, {77, 90}, {75, 102}, {78, 114}, {76, 126}};
+    /** Local x of the parapet loopholes: the trench zigzags, so it is one of two. */
+    public static int frontLoopholeX(int localZ) {
+        int jog = ((localZ - 24) / 16) % 2 == 0 ? 0 : 1;
+        return 58 + jog + 4;
+    }
 
     private static AABB campBox(int x1, int y1, int z1, int x2, int y2, int z2) {
         return new AABB(CAMP_OX + x1, BASE_Y + y1, CAMP_OZ + z1, CAMP_OX + x2 + 1, BASE_Y + y2 + 1, CAMP_OZ + z2 + 1);

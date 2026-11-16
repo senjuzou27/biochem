@@ -35,17 +35,20 @@ public class VehicleEntity extends Entity {
     private static final EntityDataAccessor<Integer> COLOUR = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> BRAKING = SynchedEntityData.defineId(VehicleEntity.class, EntityDataSerializers.BOOLEAN);
 
-    // server side: where on the network the vehicle is
-    private int halfEdge = -1;
-    private double along;
+    // server side: the lane ahead as a smooth polyline (x, z pairs) with the arc length at each point
+    private final java.util.ArrayList<double[]> path = new java.util.ArrayList<>();
+    private double along;          // distance travelled along the polyline
     private double speed;
+    private int lastHalfEdge = -1; // the last half-edge put into the path
     private int[] route;
     private int routeIndex;
+    /** Traffic lights ahead: arc length of the stop line, node, true for traffic along X. */
+    private final java.util.ArrayList<double[]> lights = new java.util.ArrayList<>();
     @Nullable
     private BlockPos destination;
+    private int stuck, ghost, lonely, redWait;
+    private boolean atRed;
     private boolean blocked;
-    private int stuck;
-    private int lonely;
 
     // client side: smooth movement between position updates
     private int lerpSteps;
@@ -92,13 +95,16 @@ public class VehicleEntity extends Entity {
 
     // ------------------------------------------------------------------ driving
 
-    /** Puts the vehicle at the start of a half-edge of the street network. */
+    /** Puts the vehicle at the start of a half-edge of the street network; it then drives on at random. */
     public void placeOn(int he, double offset) {
-        halfEdge = he;
-        along = offset;
-        Vec3 p = lanePoint();
-        float yaw = heading();
-        moveTo(p.x, groundY(p.x, p.z), p.z, yaw, 0);
+        path.clear();
+        lights.clear();
+        along = 0;
+        lastHalfEdge = -1;
+        append(he);
+        while (pathLength() < 60 && extendRandom()) { }
+        double[] p = pointAt(0), q = pointAt(3);
+        moveTo(p[0], groundY(p[0], p[1]), p[1], yawOf(q[0] - p[0], q[1] - p[1]), 0);
     }
 
     /** Sends the vehicle along a route; at its end the passengers are set down at the destination. */
@@ -106,7 +112,18 @@ public class VehicleEntity extends Entity {
         route = halfEdges;
         routeIndex = 0;
         destination = dest;
-        placeOn(halfEdges[0], 0);
+        path.clear();
+        lights.clear();
+        along = 0;
+        lastHalfEdge = -1;
+        for (int he : halfEdges) append(he);
+        double[] p = pointAt(0), q = pointAt(3);
+        moveTo(p[0], groundY(p[0], p[1]), p[1], yawOf(q[0] - p[0], q[1] - p[1]), 0);
+    }
+
+    /** Standing still for more than five seconds (for the developer statistics). */
+    public boolean isStuck() {
+        return stuck > 100 && !atRed;
     }
 
     public boolean onRoute() {
@@ -117,50 +134,110 @@ public class VehicleEntity extends Entity {
         return CityData.get().height(Mth.floor(x), Mth.floor(z)) + 1;
     }
 
-    private float heading() {
-        RoadGraph g = CityData.get().graph;
-        int a = g.from(halfEdge), b = g.to(halfEdge);
-        return (float) (Mth.atan2(-(g.x[b] - g.x[a]), g.z[b] - g.z[a]) * 180.0 / Math.PI);
+    private static float yawOf(double dx, double dz) {
+        return (float) (Mth.atan2(-dx, dz) * 180.0 / Math.PI);
     }
 
-    /** The point of the right-hand lane that corresponds to the position along the current half-edge. */
-    private Vec3 lanePoint() {
+    /** How far right of the centre line the vehicle drives on this half-edge. */
+    private double laneOffset(int he) {
         RoadGraph g = CityData.get().graph;
-        int a = g.from(halfEdge), b = g.to(halfEdge);
-        double len = Math.max(0.01, g.length(halfEdge));
-        double ux = (g.x[b] - g.x[a]) / len, uz = (g.z[b] - g.z[a]) / len;
-        double w = g.width(halfEdge);
-        // room is left for the cars parked along the kerb
-        double off = g.oneway(halfEdge) ? 0 : Mth.clamp(w / 2 - 2.9, 0.95, w / 4);
-        if (kind() == BUS) off = Math.max(off, 1.35);
-        double t = Math.min(along, len);
-        return new Vec3(g.x[a] + 0.5 + ux * t - uz * off, 0, g.z[a] + 0.5 + uz * t + ux * off);
+        double w = g.width(he);
+        if (g.oneway(he)) return 0;
+        double off = Mth.clamp(w / 4.0, 0.9, 2.6);
+        if (kind() == BUS) off = Math.max(off, 1.3);
+        return off;
     }
 
-    private boolean nextEdge() {
+    private double pathLength() {
+        return path.isEmpty() ? 0 : path.get(path.size() - 1)[2];
+    }
+
+    private void addPoint(double x, double z) {
+        if (!path.isEmpty()) {
+            double[] last = path.get(path.size() - 1);
+            double d = Math.hypot(x - last[0], z - last[1]);
+            if (d < 0.05) return;
+            path.add(new double[]{x, z, last[2] + d});
+        } else path.add(new double[]{x, z, 0});
+    }
+
+    /**
+     * Adds a half-edge to the path: its lane, offset to the right, joined to the previous one by a short curve
+     * instead of a sharp corner.
+     */
+    private void append(int he) {
         RoadGraph g = CityData.get().graph;
-        along -= g.length(halfEdge);
-        if (route != null) {
-            routeIndex++;
-            if (routeIndex >= route.length) return false;
-            halfEdge = route[routeIndex];
-            return true;
+        int a = g.from(he), b = g.to(he);
+        double ax = g.x[a] + 0.5, az = g.z[a] + 0.5, bx = g.x[b] + 0.5, bz = g.z[b] + 0.5;
+        double len = Math.max(0.01, Math.hypot(bx - ax, bz - az));
+        double ux = (bx - ax) / len, uz = (bz - az) / len, off = laneOffset(he);
+        double rx = -uz * off, rz = ux * off;
+        double r = Math.min(5.0, len / 2.5);
+        if (path.isEmpty()) addPoint(ax + rx, az + rz);
+        else {
+            // a quadratic curve from the end of the last lane to the start of this one
+            double[] p0 = path.get(path.size() - 1);
+            double p2x = ax + rx + ux * r, p2z = az + rz + uz * r;
+            double cx = ax + rx, cz = az + rz;
+            for (int i = 1; i <= 5; i++) {
+                double t = i / 5.0, m = 1 - t;
+                addPoint(m * m * p0[0] + 2 * m * t * cx + t * t * p2x, m * m * p0[1] + 2 * m * t * cz + t * t * p2z);
+            }
         }
-        int node = g.to(halfEdge), back = g.from(halfEdge);
-        int[] out = g.out(node);
+        // the end of this lane stops short of the junction, where the next curve starts
+        addPoint(bx + rx - ux * r, bz + rz - uz * r);
+        if (g.signal[b]) {
+            double stop = pathLength() - g.width(he) * 0.0 - 1.0;
+            boolean alongX = Math.abs(bx - ax) > Math.abs(bz - az);
+            lights.add(new double[]{stop, b, alongX ? 1 : 0});
+        }
+        lastHalfEdge = he;
+    }
+
+    /** Picks the next street at random, mostly straight on; false at a dead end. */
+    private boolean extendRandom() {
+        RoadGraph g = CityData.get().graph;
+        if (lastHalfEdge < 0) return false;
+        int node = g.to(lastHalfEdge), back = g.from(lastHalfEdge);
         int pick = -1, seen = 0;
-        for (int he : out) {
+        for (int he : g.out(node)) {
             if (g.to(he) == back) continue;
-            // mostly straight on
-            int a = g.from(halfEdge), b = node, c = g.to(he);
-            double dot = (g.x[b] - g.x[a]) * (double) (g.x[c] - g.x[b]) + (g.z[b] - g.z[a]) * (double) (g.z[c] - g.z[b]);
-            int weight = dot > 0 ? 5 : 1;
+            int a = back, c = g.to(he);
+            double dot = (g.x[node] - g.x[a]) * (double) (g.x[c] - g.x[node]) + (g.z[node] - g.z[a]) * (double) (g.z[c] - g.z[node]);
+            double l1 = Math.hypot(g.x[node] - g.x[a], g.z[node] - g.z[a]), l2 = Math.hypot(g.x[c] - g.x[node], g.z[c] - g.z[node]);
+            double cos = dot / Math.max(1e-6, l1 * l2);
+            if (cos < -0.3) continue;   // no U-turns and no hairpins
+            int weight = cos > 0.7 ? 6 : 1;
             seen += weight;
             if (random.nextInt(seen) < weight) pick = he;
         }
         if (pick < 0) return false;
-        halfEdge = pick;
+        append(pick);
         return true;
+    }
+
+    /** The point of the path at arc length s. */
+    private double[] pointAt(double s) {
+        if (path.isEmpty()) return new double[]{getX(), getZ()};
+        if (s <= path.get(0)[2]) return path.get(0);
+        int lo = 0, hi = path.size() - 1;
+        if (s >= path.get(hi)[2]) return path.get(hi);
+        while (hi - lo > 1) {
+            int mid = (lo + hi) >>> 1;
+            if (path.get(mid)[2] <= s) lo = mid;
+            else hi = mid;
+        }
+        double[] p = path.get(lo), q = path.get(hi);
+        double t = (s - p[2]) / Math.max(1e-6, q[2] - p[2]);
+        return new double[]{p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t, s};
+    }
+
+    /** Forgets the part of the path already driven, keeping the arc lengths consistent. */
+    private void trim() {
+        int drop = 0;
+        while (drop + 2 < path.size() && path.get(drop + 1)[2] < along - 10) drop++;
+        if (drop > 20) path.subList(0, drop).clear();
+        lights.removeIf(l -> l[0] < along - 2);
     }
 
     private void arrive() {
@@ -178,37 +255,58 @@ public class VehicleEntity extends Entity {
         if (route != null) arrive();
     }
 
-    private boolean mustStop(RoadGraph g) {
-        double len = g.length(halfEdge), rem = len - along;
-        int node = g.to(halfEdge);
-        if (g.signal[node]) {
-            double line = g.width(halfEdge) / 2 + 5 + halfLength();
-            if (rem < line + 4 && rem > line - 4) {
-                int a = g.from(halfEdge);
-                boolean alongX = Math.abs(g.x[node] - g.x[a]) > Math.abs(g.z[node] - g.z[a]);
-                if (!Signals.green(alongX, level().getGameTime())) return true;
+    /** How fast the vehicle may go now, considering lights, the vehicle ahead and people on the road. */
+    private double allowedSpeed(double cruise) {
+        double limit = cruise;
+        boolean story = route != null;
+        // red and yellow lights: stop before the line, unless already too close to stop
+        atRed = false;
+        for (double[] l : lights) {
+            double dist = l[0] - along;
+            if (dist < 0 || dist > 30) continue;
+            // the bus of the story does not keep the player waiting for long
+            if (!Signals.green(l[2] > 0, level().getGameTime()) && dist > 1.5 && !(story && redWait > 60)) {
+                limit = Math.min(limit, Math.max(0, (dist - 2.0) * 0.06));
+                atRed = dist < 12;
             }
+            break;
         }
-        if (tickCount % 3 == 0) {
-            // anything in the way within a few metres of the front bumper?
+        redWait = atRed && speed < 0.05 ? redWait + 1 : 0;
+        // slow down where the path bends
+        double[] a = pointAt(along), b = pointAt(along + 4), c = pointAt(along + 8);
+        double h1 = Math.atan2(b[1] - a[1], b[0] - a[0]), h2 = Math.atan2(c[1] - b[1], c[0] - b[0]);
+        double bend = Math.abs(Mth.wrapDegrees((h2 - h1) * 180 / Math.PI));
+        if (bend > 25) limit = Math.min(limit, 0.28);
+        if (ghost > 0) return limit;
+        if (tickCount % 2 == 0) {
+            blocked = false;
             float yaw = getYRot() * Mth.DEG_TO_RAD;
             double fx = -Mth.sin(yaw), fz = Mth.cos(yaw);
-            double reach = halfLength() + 2.5 + speed * 6;
-            AABB box = new AABB(getX() + fx * reach - 1.6, getY() - 1, getZ() + fz * reach - 1.6, getX() + fx * reach + 1.6, getY() + 3, getZ() + fz * reach + 1.6)
-                    .minmax(new AABB(getX() + fx * (halfLength() + 1) - 1.2, getY() - 1, getZ() + fz * (halfLength() + 1) - 1.2,
-                            getX() + fx * (halfLength() + 1) + 1.2, getY() + 3, getZ() + fz * (halfLength() + 1) + 1.2));
-            blocked = false;
-            for (Entity e : level().getEntities(this, box, e -> e instanceof LivingEntity || e instanceof VehicleEntity)) {
+            double reach = halfLength() + 3 + speed * 12;
+            double gap = Double.MAX_VALUE;
+            for (Entity e : level().getEntities(this, getBoundingBox().inflate(reach + 4, 3, reach + 4), e -> e instanceof LivingEntity || e instanceof VehicleEntity)) {
                 if (hasPassenger(e)) continue;
+                double dx = e.getX() - getX(), dz = e.getZ() - getZ();
+                double ahead = dx * fx + dz * fz, side = Math.abs(dx * -fz + dz * fx);
                 if (e instanceof VehicleEntity v) {
-                    // only those driving the same way count, oncoming traffic passes
-                    if (Math.abs(Mth.wrapDegrees(v.getYRot() - getYRot())) > 100) continue;
+                    // only a vehicle in this lane, driving the same way, holds us up
+                    if (Math.abs(Mth.wrapDegrees(v.getYRot() - getYRot())) > 50 || side > 1.6) continue;
+                    double d = ahead - halfLength() - v.halfLength();
+                    if (ahead > 0 && d < gap) gap = d;
+                } else {
+                    // a person on the carriageway right in front
+                    if (side > 1.4 || ahead <= 0) continue;
+                    if (!(e instanceof Player) && (story || stuck > 60)) continue;
+                    int gnd = CityData.get().ground(Mth.floor(e.getX()), Mth.floor(e.getZ()));
+                    if (gnd != ru.ufamod.city.Ground.ROAD) continue;
+                    double d = ahead - halfLength() - 0.5;
+                    if (d < gap) gap = d;
                 }
-                blocked = true;
-                break;
             }
-        }
-        return blocked;
+            blocked = gap < 1.5;
+            if (gap < Double.MAX_VALUE) limit = Math.min(limit, Math.max(0, (gap - 1.5) * 0.08));
+        } else if (blocked) limit = 0;
+        return limit;
     }
 
     @Override
@@ -223,79 +321,70 @@ public class VehicleEntity extends Entity {
             }
             return;
         }
-        if (halfEdge < 0) {
+        if (path.isEmpty()) {
             discard();
             return;
         }
-        RoadGraph g = CityData.get().graph;
         boolean story = route != null;
         double cruise = switch (kind()) {
-            case BUS -> story ? 0.62 : 0.42;
-            case MINIBUS -> 0.48;
-            default -> 0.52;
+            case BUS -> story ? 1.0 : 0.45;
+            case MINIBUS -> 0.55;
+            default -> 0.6;
         };
-        boolean stop = mustStop(g);
-        // a jam must not hold the bus with the player for ever
-        stuck = stop && speed < 0.02 ? stuck + 1 : 0;
-        if (stuck > 400) {
-            stop = false;
-            if (stuck > 460) stuck = 0;
-        }
-        // slow down for sharp corners
-        double rem = g.length(halfEdge) - along;
-        if (rem < 9 && !stop) cruise = Math.min(cruise, 0.3);
-        speed = stop ? Math.max(0, speed - 0.07) : Math.min(cruise, speed + 0.02);
-        entityData.set(BRAKING, stop);
-        along += speed;
-        while (along >= g.length(halfEdge)) {
-            if (!nextEdge()) {
-                if (story) {
-                    arrive();
-                    along = 0;
-                    // goes on as ordinary traffic
-                    int node = g.to(halfEdge);
-                    if (g.out(node).length == 0) {
-                        discard();
-                        return;
-                    }
-                    halfEdge = g.out(node)[0];
-                } else {
+        double limit = allowedSpeed(cruise);
+        speed = limit < speed ? Math.max(limit, speed - 0.06) : Math.min(limit, speed + 0.02);
+        entityData.set(BRAKING, limit < speed + 0.01 && speed < cruise * 0.6);
+        // a vehicle that cannot move on: the story bus pushes through, others give way or leave
+        stuck = speed < 0.02 ? stuck + 1 : 0;
+        if (ghost > 0) ghost--;
+        if (stuck > (story ? 60 : 200)) {
+            if (story) ghost = 80;
+            else {
+                Player near = level().getNearestPlayer(this, 40);
+                if (near == null) {
                     discard();
                     return;
                 }
+                ghost = 60;
+            }
+            stuck = 0;
+        }
+        along += speed;
+        if (!story && pathLength() - along < 50) extendRandom();
+        if (along >= pathLength() - 0.2) {
+            if (story) {
+                arrive();
+                speed = 0;
+                if (!extendRandom()) {
+                    discard();
+                    return;
+                }
+            } else {
+                discard();
+                return;
             }
         }
-        // chase the lane point: this rounds the corners
-        Vec3 target = lanePoint();
-        double dx = target.x - getX(), dz = target.z - getZ();
-        double d = Math.sqrt(dx * dx + dz * dz);
-        double step = Math.min(d, Math.max(speed * 1.25, d > 3 ? 0.6 : 0.05));
-        double nx = getX(), nz = getZ();
-        if (d > 1e-4) {
-            nx += dx / d * step;
-            nz += dz / d * step;
-        }
-        if (d > 30) {
-            nx = target.x;
-            nz = target.z;
-        }
-        if (!level().isLoaded(BlockPos.containing(nx, getY(), nz))) {
+        trim();
+        double[] p = pointAt(along), ahead = pointAt(along + Math.max(2.5, halfLength()));
+        BlockPos at = BlockPos.containing(p[0], getY(), p[1]);
+        if (!level().isLoaded(at)) {
             if (story) arrive();
             discard();
             return;
         }
-        double ny = getY() + Mth.clamp(groundY(nx, nz) - getY(), -0.25, 0.25);
+        // follow the ground smoothly; jump onto a different level (a bridge, a tunnel) at once
+        double gy = groundY(p[0], p[1]), ny = Math.abs(gy - getY()) > 3 ? gy : getY() + Mth.clamp(gy - getY(), -0.2, 0.2);
         float yaw = getYRot();
-        if (step > 0.02) {
-            float want = (float) (Mth.atan2(-(nx - getX()), nz - getZ()) * 180.0 / Math.PI);
-            yaw += Mth.clamp(Mth.wrapDegrees(want - yaw), -9f, 9f);
+        if (Math.hypot(ahead[0] - p[0], ahead[1] - p[1]) > 0.3) {
+            float want = yawOf(ahead[0] - p[0], ahead[1] - p[1]);
+            yaw += Mth.clamp(Mth.wrapDegrees(want - yaw), -12f, 12f);
         }
-        setPos(nx, ny, nz);
+        setPos(p[0], ny, p[1]);
         setYRot(yaw);
         // ordinary traffic disappears when nobody is around
         if (!story && tickCount % 40 == 0) {
-            Player p = level().getNearestPlayer(this, 170);
-            lonely = p == null ? lonely + 1 : 0;
+            Player pl = level().getNearestPlayer(this, 170);
+            lonely = pl == null ? lonely + 1 : 0;
             if (lonely >= 2 && getPassengers().isEmpty()) discard();
         }
     }

@@ -45,8 +45,11 @@ public final class UfaWorld {
         npc.setRole(role);
         npc.setVariant(variant);
         npc.setWander(wander);
-        npc.setCustomName(Component.literal(name));
-        npc.setCustomNameVisible(role != NpcRole.CITIZEN);
+        // the enemy has no name tag: it would give away a soldier hiding in a crater
+        if (role != NpcRole.ENEMY) {
+            npc.setCustomName(Component.literal(name));
+            npc.setCustomNameVisible(role != NpcRole.CITIZEN);
+        }
         level.addFreshEntityWithPassengers(npc);
         return npc;
     }

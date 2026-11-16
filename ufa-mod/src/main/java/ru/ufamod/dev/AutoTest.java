@@ -158,8 +158,19 @@ public final class AutoTest {
         step(10, "look out of the window", () -> player.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot() + 90f, 5f));
         step(120, "ride on", () -> { });
         shot("03_bus_window");
-        step(10, "get there", this::finishRide);
-        step(40, "arrive", () -> { });
+        // the whole way by bus, no shortcut: at most six minutes of game time
+        for (int i = 0; i < 36; i++) {
+            final int n = i;
+            step(200, "riding", () -> {
+                if (QuestManager.stage(player) != Stage.TO_BSMU) {
+                    UfaMod.LOGGER.info("AUTOTEST the bus arrived within {} s", (n + 1) * 10);
+                    while (steps.peek() != null && steps.peek().name().equals("riding")) steps.poll();
+                    return;
+                }
+                UfaMod.LOGGER.info("AUTOTEST bus after {} s at {} {}", (n + 1) * 10, player.blockPosition().toShortString(),
+                        player.getVehicle() instanceof ru.ufamod.entity.VehicleEntity ? "riding" : "NOT IN THE BUS");
+            });
+        }
         expect(Stage.WATCHMAN);
         view(P.bsmuView, P.guard, -18);
         shot("04_bsmu_building_7");
@@ -279,6 +290,11 @@ public final class AutoTest {
         });
         step(260, "the first attack comes", () -> { });
         shot("13e_front_attack");
+        step(700, "they come closer", () -> {
+            for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))
+                UfaMod.LOGGER.info("AUTOTEST enemy at {} tier {}", e.blockPosition().toShortString(), e.getPersistentData().getInt("tier"));
+        });
+        shot("13e2_front_close");
         for (int i = 0; i < 14; i++) {
             step(80, "fight", () -> {
                 for (NpcEntity e : player.level().getEntitiesOfClass(NpcEntity.class, Plan.FRONT_BOX, n -> n.getRole() == NpcRole.ENEMY && n.isAlive()))
@@ -373,6 +389,16 @@ public final class AutoTest {
             step(40, "let it load", () -> { });
             shot("40_" + lookNames[i]);
         }
+        // traffic on Lenina: watch it for half a minute
+        tp(street(30, -330), 180, 10);
+        for (int i = 0; i < 3; i++) {
+            step(200, "watch the traffic", () -> {
+                List<ru.ufamod.entity.VehicleEntity> vs = player.level().getEntitiesOfClass(ru.ufamod.entity.VehicleEntity.class, player.getBoundingBox().inflate(160, 60, 160));
+                long stuck = vs.stream().filter(ru.ufamod.entity.VehicleEntity::isStuck).count();
+                UfaMod.LOGGER.info("AUTOTEST traffic: {} vehicles around, {} standing for more than 5 s", vs.size(), stuck);
+            });
+        }
+        shot("24b_traffic");
         tp(street(1500, -1200), 200, -12);
         shot("25_dorm_district");
         tp(street(700, 300), 135, -10);

@@ -310,7 +310,7 @@ class City:
                                   "secondary_link": 1, "primary": 4, "primary_link": 1, "trunk": 6, "trunk_link": 1}[hw]
                 w = width_of(t, lanes * 3.5 + (0 if oneway else 0.5))
             sw = 0 if hw == "service" or t.get("sidewalk") in ("no", "none", "separate") else (3 if rank[hw] >= 3 else 2.5)
-            self.road_info.append({"id": wid, "hw": hw, "w": w, "lanes": lanes, "oneway": oneway, "p": p, "nds": nds,
+            self.road_info.append({"id": wid, "hw": hw, "w": w, "lanes": lanes, "oneway": oneway, "rev": t.get("oneway") == "-1", "p": p, "nds": nds,
                                    "name": t.get("name", ""), "tram": False, "sw": sw})
         # sidewalks first, then all carriageways on top so a sidewalk never cuts a road
         for r in self.road_info:
@@ -756,7 +756,9 @@ class City:
                     continue
                 cur = node(n)
                 if prev >= 0 and cur >= 0 and prev != cur:
-                    edges.append([prev, cur, int(round(r["w"] * 10)), 1 if r["oneway"] else 0])
+                    # oneway=-1: the traffic goes against the direction of the way
+                    a_, b_ = (cur, prev) if r.get("rev") else (prev, cur)
+                    edges.append([a_, b_, int(round(r["w"] * 10)), 1 if r["oneway"] else 0])
                 prev = cur
         print("graph nodes", len(nodes), "edges", len(edges), "signal junctions", sum(q[2] for q in nodes))
         return {"n": [v for q in nodes for v in q], "e": [v for q in edges for v in q]}

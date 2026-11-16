@@ -110,48 +110,16 @@ public class NpcEntity extends PathfinderMob {
             return;
         }
         if (getRole() == NpcRole.ENEMY) {
-            enemyTick();
+            ru.ufamod.world.FrontAI.enemyTick(this);
             return;
         }
+        if (getRole() == NpcRole.SOLDIER) ru.ufamod.world.FrontAI.friendlyTick(this);
         if (follow != null && tickCount % 4 == 0) {
             Player target = level().getPlayerByUUID(follow);
             // come up to the player but keep a polite three blocks away
             if (target != null && distanceToSqr(target) > 25.0) getNavigation().moveTo(target, 1.0);
             else getNavigation().stop();
         }
-    }
-
-    private void enemyTick() {
-        Player p = level().getNearestPlayer(this, 90);
-        if (p == null || p.isCreative() || p.isSpectator()) {
-            getNavigation().stop();
-            return;
-        }
-        getLookControl().setLookAt(p, 30f, 30f);
-        if (cover != null) {
-            double d = distanceToSqr(cover.getX() + 0.5, getY(), cover.getZ() + 0.5);
-            if (d > 3.0) {
-                setShiftKeyDown(false);
-                if (tickCount % 20 == 0 || getNavigation().isDone()) getNavigation().moveTo(cover.getX() + 0.5, cover.getY(), cover.getZ() + 0.5, 0.9);
-                return;
-            }
-            getNavigation().stop();
-            setShiftKeyDown(true);
-        }
-        if (--shotCooldown > 0) return;
-        shotCooldown = 30 + random.nextInt(50);
-        if (!getSensing().hasLineOfSight(p)) return;
-        double dist = distanceTo(p);
-        level().playSound(null, getX(), getEyeY(), getZ(), net.minecraft.sounds.SoundEvents.FIREWORK_ROCKET_BLAST,
-                net.minecraft.sounds.SoundSource.HOSTILE, 2.5f, 0.55f + random.nextFloat() * 0.2f);
-        if (level() instanceof net.minecraft.server.level.ServerLevel sl) {
-            net.minecraft.world.phys.Vec3 look = getViewVector(1f);
-            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.SMOKE, getX() + look.x * 0.9, getEyeY() - 0.1 + look.y * 0.9, getZ() + look.z * 0.9, 3, 0.05, 0.05, 0.05, 0.01);
-        }
-        // a rifle at fifty metres does not hit often, a soldier keeping low in the trench even less
-        double chance = net.minecraft.util.Mth.clamp(0.34 - dist / 200.0, 0.06, 0.3);
-        if (p.isCrouching()) chance *= 0.45;
-        if (random.nextDouble() < chance) p.hurt(damageSources().mobAttack(this), 3.0f);
     }
 
     @Override

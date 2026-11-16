@@ -75,8 +75,10 @@ public class FrontBuilder extends Build {
     private void field() {
         // the craters the enemy takes cover in, and many more
         for (int[] p : FRONT_COVER) crater(p[0], p[1], 2);
+        for (int[] p : FRONT_COVER_MID) crater(p[0], p[1], 2);
+        for (int[] p : FRONT_COVER_NEAR) crater(p[0], p[1], 1);
         for (int i = 0; i < 70; i++) {
-            int x = 66 + rnd.nextInt(84), z = 6 + rnd.nextInt(FRONT_D - 12);
+            int x = 82 + rnd.nextInt(68), z = 6 + rnd.nextInt(FRONT_D - 12);
             crater(x, z, 1 + rnd.nextInt(3));
         }
         for (int i = 0; i < 12; i++) crater(4 + rnd.nextInt(50), 6 + rnd.nextInt(FRONT_D - 12), 1 + rnd.nextInt(2));

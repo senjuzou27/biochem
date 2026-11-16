@@ -348,6 +348,12 @@ def main():
         "medic_0": skin(20, SKIN_TONES[2], brown, (0, 0, 0), (0, 0, 0), camo=True, long_hair=True, hat=("cap", (228, 228, 228)), shoes=(24, 22, 20)),
     }
     for name, img in npc.items():
+        if name.startswith("enemy"):
+            # a dull red armband on both upper arms: visible, not bright
+            band = (128, 38, 34, 255)
+            dd = ImageDraw.Draw(img)
+            dd.rectangle([40, 21, 55, 22], fill=band)   # right arm, all four sides
+            dd.rectangle([32, 53, 47, 54], fill=band)   # left arm
         save(img, "entity", "npc", name + ".png")
     # vehicles are drawn from plain coloured boxes and only need a white texture
     save(Image.new("RGBA", (4, 4), (255, 255, 255, 255)), "entity", "white.png")

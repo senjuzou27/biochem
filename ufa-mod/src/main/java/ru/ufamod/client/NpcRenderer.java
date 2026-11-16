@@ -20,6 +20,13 @@ public class NpcRenderer extends HumanoidMobRenderer<NpcEntity, PlayerModel<NpcE
         super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
     }
 
+    /** Enemy soldiers stay faintly visible at night, as if lit from afar, without glowing. */
+    @Override
+    protected int getBlockLightLevel(NpcEntity entity, net.minecraft.core.BlockPos pos) {
+        int light = super.getBlockLightLevel(entity, pos);
+        return entity.getRole() == NpcRole.ENEMY ? Math.max(light, 8) : light;
+    }
+
     /** The wounded soldier lies face down on the ground, the way a swimming player is drawn. */
     @Override
     protected void setupRotations(NpcEntity entity, com.mojang.blaze3d.vertex.PoseStack pose, float age, float yaw, float partial) {
